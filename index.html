@@ -288,6 +288,19 @@
       <div id="entries"><p class="muted">Cargando tus registros…</p></div>
     </div>
     <div class="panel hidden" data-tab-panel="historial">
+      <h2>Mis estadísticas personales</h2>
+      <p class="hint">Un resumen de tus propios registros, sin diagnósticos ni predicciones médicas. Se actualiza cuando guardas una menstruación.</p>
+      <div class="stats">
+        <div class="stat"><span>Menstruaciones registradas</span><strong id="personalPeriodCount">—</strong><span>registros con fecha</span></div>
+        <div class="stat"><span>Duración media de ciclo</span><strong id="personalCycleAverage">—</strong><span>entre fechas registradas</span></div>
+        <div class="stat"><span>Variación observada</span><strong id="personalCycleRange">—</strong><span>ciclo más corto y más largo</span></div>
+        <div class="stat"><span>Ánimo más anotado</span><strong id="personalMood">—</strong><span id="personalMoodCount">Aún sin suficientes notas</span></div>
+      </div>
+      <h3 style="margin-top:20px">Síntomas mencionados en tus notas</h3>
+      <p id="personalSymptoms" class="muted">Cuando anotes síntomas, aquí aparecerán las palabras que más se repiten.</p>
+      <p class="hint">Este resumen solo analiza las notas que tú has escrito; no interpreta síntomas ni sustituye la orientación de un profesional sanitario.</p>
+    </div>
+    <div class="panel hidden" data-tab-panel="historial">
       <h2>Mis datos y privacidad</h2>
       <p id="accountInfo" class="muted"></p>
       <p class="hint">Puedes guardar una copia de tus registros en tu dispositivo. El archivo incluirá información íntima: guárdalo en un lugar seguro.</p>
@@ -656,6 +669,56 @@
     }
   }
 
+  function renderPersonalStats(records) {
+    const dates = [...new Set(records.map(r => r.periodDate).filter(Boolean))].sort();
+    const lengths = [];
+    for (let i = 1; i < dates.length; i++) {
+      const days = Math.round((new Date(dates[i] + "T12:00:00") - new Date(dates[i - 1] + "T12:00:00")) / 86400000);
+      if (days >= 1 && days <= 120) lengths.push(days);
+    }
+    document.getElementById("personalPeriodCount").textContent = String(dates.length);
+    document.getElementById("personalCycleAverage").textContent = lengths.length
+      ? Math.round(lengths.reduce((sum, days) => sum + days, 0) / lengths.length) + " días" : "—";
+    document.getElementById("personalCycleRange").textContent = lengths.length
+      ? Math.min(...lengths) + "–" + Math.max(...lengths) + " días" : "—";
+
+    const moodCounts = {};
+    records.forEach(record => {
+      const mood = String(record.mood || "").trim();
+      if (mood) moodCounts[mood] = (moodCounts[mood] || 0) + 1;
+    });
+    const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0];
+    document.getElementById("personalMood").textContent = topMood ? topMood[0] : "—";
+    document.getElementById("personalMoodCount").textContent = topMood
+      ? topMood[1] + (topMood[1] === 1 ? " anotación" : " anotaciones") : "Todavía no has anotado tu ánimo";
+
+    const text = records.map(record => String(record.symptoms || "").toLocaleLowerCase("es")).join(" ");
+    const categories = [
+      ["Dolor o cólicos", /dolor|c[oó]lico|retortij[oó]n|molestia/g],
+      ["Cansancio", /cansancio|cansada|cansado|fatiga|agotamiento/g],
+      ["Dolor de cabeza", /dolor de cabeza|migra[nñ]a|cefalea/g],
+      ["Hinchazón", /hinchaz[oó]n|hinchada|hinchado|inflamaci[oó]n/g],
+      ["Sensibilidad en el pecho", /pecho sensible|dolor de pecho|sensibilidad mamaria/g],
+      ["Cambios de ánimo", /irritable|irritabilidad|ansiosa|ansioso|triste|sensibl[e]|cambios de [aá]nimo/g],
+      ["Acné o piel", /acn[eé]|granitos|piel/g],
+      ["Sueño", /insomnio|sue[nñ]o|dorm[ií]/g],
+      ["Náuseas", /n[aá]useas|n[aá]usea/g]
+    ];
+    const mentions = categories.map(([label, pattern]) => {
+      const matches = text.match(pattern);
+      return { label, count: matches ? matches.length : 0 };
+    }).filter(item => item.count > 0).sort((a, b) => b.count - a.count).slice(0, 3);
+    const symptomsEl = document.getElementById("personalSymptoms");
+    symptomsEl.textContent = "";
+    if (!mentions.length) {
+      symptomsEl.textContent = records.some(record => String(record.symptoms || "").trim())
+        ? "Aún no se repiten palabras de las categorías habituales. Puedes seguir escribiendo con tus propias palabras."
+        : "Todavía no hay notas de síntomas para resumir.";
+    } else {
+      symptomsEl.textContent = mentions.map(item => item.label + " (" + item.count + ")").join(" · ");
+    }
+  }
+
   function renderCycleSummary(records) {
     calendarRecords = records.slice();
     renderCalendar();
@@ -666,6 +729,7 @@
       if (days >= 15 && days <= 60) lengths.push({ start: dates[i - 1], end: dates[i], days });
     }
     const avg = lengths.length ? Math.round(lengths.reduce((sum, x) => sum + x.days, 0) / lengths.length) : null;
+    renderPersonalStats(records);
     document.getElementById("avgCycle").textContent = avg ? avg + " días" : "—";
     const nextEl = document.getElementById("nextPeriod");
     const noteEl = document.getElementById("predictionNote");
