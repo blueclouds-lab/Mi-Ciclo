@@ -376,11 +376,14 @@
         db.ref("users/" + uid + "/cycleEntries").once("value"),
         db.ref("users/" + uid + "/sexualEntries").once("value")
       ]);
-      const records = [];
-      cycleSnapshot.forEach(child => records.push({ id: child.key, ...child.val() }));
+      const records = Object.entries(cycleSnapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
       records.sort((a, b) => String(b.periodDate || "").localeCompare(String(a.periodDate || "")));
       renderCycleSummary(records);
       entries.textContent = "";
+      const countNote = document.createElement("p");
+      countNote.className = "hint";
+      countNote.textContent = "Registros cargados desde Firebase: " + records.length;
+      entries.appendChild(countNote);
       if (!records.length) {
         entries.innerHTML = "<p class='muted'>Todavía no hay registros menstruales.</p>";
       } else {
