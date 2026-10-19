@@ -416,7 +416,7 @@
       svg.appendChild(dateLabel);
     });
     chart.appendChild(svg);
-    document.getElementById("chartNote").textContent = "Mostrando hasta " + recent.length + " ciclos. Las variaciones son comunes; el gráfico no diagnostica problemas.";
+    document.getElementById("chartNote").textContent = "Últimos " + recent.length + " ciclos, del más antiguo al más reciente. La línea discontinua marca la media. Las variaciones son comunes; el gráfico no diagnostica problemas.";
   }
 
   async function loadEntries(uid) {
