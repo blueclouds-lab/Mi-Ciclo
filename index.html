@@ -3,23 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#17151c">
+  <meta name="theme-color" content="#173b36">
   <title>Mi Ciclo · Tu espacio íntimo</title>
   <style>
     :root {
       color-scheme: dark;
-      --bg: #17151c;
-      --panel: #24212c;
-      --text: #f6f0f7;
-      --muted: #b8adbf;
-      --accent: #dca7d4;
-      --border: #443b4b;
+      --bg: #102522;
+      --panel: #193632;
+      --text: #effbf7;
+      --muted: #b1d0c8;
+      --accent: #a8e6d5;
+      --border: #315b52;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       min-height: 100vh;
-      background: radial-gradient(ellipse at top, #342638, var(--bg) 65%);
+      background: radial-gradient(ellipse at top, #28534a, var(--bg) 68%);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       padding: 28px 16px;
@@ -30,7 +30,7 @@
     h1 { margin: 8px 0; font-size: 34px; letter-spacing: -1px; }
     .subtitle, .muted { color: var(--muted); line-height: 1.5; }
     .panel {
-      background: rgba(36, 33, 44, .96);
+      background: rgba(25, 54, 50, .96);
       border: 1px solid var(--border);
       border-radius: 22px;
       padding: 23px;
@@ -47,10 +47,10 @@
     }
     input, textarea {
       color: var(--text);
-      background: #19171f;
+      background: #122b27;
       border: 1px solid var(--border);
     }
-    select { width: 100%; color: var(--text); background: #19171f; border: 1px solid var(--border); border-radius: 12px; padding: 13px; font: inherit; }
+    select { width: 100%; color: var(--text); background: #122b27; border: 1px solid var(--border); border-radius: 12px; padding: 13px; font: inherit; }
     textarea { resize: vertical; min-height: 85px; }
     button {
       border: 0;
@@ -76,13 +76,12 @@
     }
 
     .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    .stat { background: #19171f; border: 1px solid var(--border); border-radius: 15px; padding: 14px; }
+    .stat { background: #122b27; border: 1px solid var(--border); border-radius: 15px; padding: 14px; }
     .stat strong { display: block; font-size: 20px; margin: 5px 0; }
     .stat span { color: var(--muted); font-size: 12px; }
-    .chart { display: flex; align-items: end; gap: 9px; height: 150px; padding: 15px 4px 0; border-bottom: 1px solid var(--border); }
-    .chart-col { flex: 1; min-width: 0; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: end; align-items: center; gap: 6px; }
-    .bar { width: min(100%, 28px); min-height: 4px; border-radius: 8px 8px 2px 2px; background: linear-gradient(180deg, #e6b7e0, #9868a8); }
-    .chart-label { font-size: 11px; color: var(--muted); }
+    .chart { width: 100%; height: 180px; padding: 8px 0 0; overflow: hidden; }
+    .chart svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    .chart-label { font-size: 11px; fill: var(--muted); }
     .pill { display: inline-block; border: 1px solid var(--border); border-radius: 99px; padding: 3px 8px; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
     .hint { font-size: 13px; color: var(--muted); line-height: 1.5; }
     @media (max-width: 380px) { .panel { padding: 17px; } .stats { grid-template-columns: 1fr 1fr; } }
@@ -348,23 +347,60 @@
       document.getElementById("chartNote").textContent = "Registra al menos dos menstruaciones para ver el gráfico.";
       return;
     }
-    const max = Math.max(35, ...recent.map(x => x.days));
-    recent.forEach((item, index) => {
-      const col = document.createElement("div");
-      col.className = "chart-col";
-      const value = document.createElement("span");
-      value.className = "chart-label";
-      value.textContent = item.days + " d";
-      const bar = document.createElement("div");
-      bar.className = "bar";
-      bar.style.height = Math.max(8, Math.round(item.days / max * 100)) + "%";
-      bar.title = "Ciclo de " + item.days + " días";
-      const label = document.createElement("span");
-      label.className = "chart-label";
-      label.textContent = formatDate(item.end).slice(0, 5);
-      col.append(value, bar, label);
-      chart.appendChild(col);
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", "0 0 320 170");
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", "Gráfico lineal de duración de los ciclos en días");
+    const minDays = Math.min(...recent.map(x => x.days), 21) - 2;
+    const maxDays = Math.max(...recent.map(x => x.days), 35) + 2;
+    const left = 28, right = 306, top = 20, bottom = 124;
+    const xAt = i => recent.length === 1 ? (left + right) / 2 : left + i * (right - left) / (recent.length - 1);
+    const yAt = value => bottom - (value - minDays) / Math.max(1, maxDays - minDays) * (bottom - top);
+    [minDays, Math.round((minDays + maxDays) / 2), maxDays].forEach(value => {
+      const y = yAt(value);
+      const grid = document.createElementNS(ns, "line");
+      grid.setAttribute("x1", left); grid.setAttribute("x2", right);
+      grid.setAttribute("y1", y); grid.setAttribute("y2", y);
+      grid.setAttribute("stroke", "#315b52"); grid.setAttribute("stroke-dasharray", "3 4");
+      svg.appendChild(grid);
+      const label = document.createElementNS(ns, "text");
+      label.setAttribute("x", 2); label.setAttribute("y", y + 4);
+      label.setAttribute("font-size", "10"); label.setAttribute("fill", "#b1d0c8");
+      label.textContent = value;
+      svg.appendChild(label);
     });
+    const area = document.createElementNS(ns, "path");
+    const points = recent.map((item, i) => [xAt(i), yAt(item.days)]);
+    const linePath = points.map((p, i) => (i ? "L" : "M") + p[0] + " " + p[1]).join(" ");
+    area.setAttribute("d", linePath + " L" + points[points.length - 1][0] + " " + bottom + " L" + points[0][0] + " " + bottom + " Z");
+    area.setAttribute("fill", "#a8e6d5"); area.setAttribute("fill-opacity", "0.12");
+    svg.appendChild(area);
+    const line = document.createElementNS(ns, "path");
+    line.setAttribute("d", linePath); line.setAttribute("fill", "none");
+    line.setAttribute("stroke", "#a8e6d5"); line.setAttribute("stroke-width", "3");
+    line.setAttribute("stroke-linecap", "round"); line.setAttribute("stroke-linejoin", "round");
+    svg.appendChild(line);
+    recent.forEach((item, i) => {
+      const [x, y] = points[i];
+      const dot = document.createElementNS(ns, "circle");
+      dot.setAttribute("cx", x); dot.setAttribute("cy", y); dot.setAttribute("r", "4.5");
+      dot.setAttribute("fill", "#d6fff0"); dot.setAttribute("stroke", "#5abca2"); dot.setAttribute("stroke-width", "2");
+      const title = document.createElementNS(ns, "title");
+      title.textContent = item.days + " días · " + formatDate(item.end);
+      dot.appendChild(title); svg.appendChild(dot);
+      const value = document.createElementNS(ns, "text");
+      value.setAttribute("x", x); value.setAttribute("y", y - 10);
+      value.setAttribute("text-anchor", "middle"); value.setAttribute("font-size", "11");
+      value.setAttribute("fill", "#effbf7"); value.textContent = item.days + " d";
+      svg.appendChild(value);
+      const dateLabel = document.createElementNS(ns, "text");
+      dateLabel.setAttribute("x", x); dateLabel.setAttribute("y", 148);
+      dateLabel.setAttribute("text-anchor", "middle"); dateLabel.setAttribute("class", "chart-label");
+      dateLabel.textContent = formatDate(item.end).slice(0, 5);
+      svg.appendChild(dateLabel);
+    });
+    chart.appendChild(svg);
     document.getElementById("chartNote").textContent = "Mostrando hasta " + recent.length + " ciclos. Las variaciones son comunes; el gráfico no diagnostica problemas.";
   }
 
