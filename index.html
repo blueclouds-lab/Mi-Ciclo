@@ -1103,6 +1103,8 @@
       sexSnapshot.forEach(child => sexRecords.push({ id: child.key, ...child.val() }));
       sexRecords.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
       loadedSexRecords = sexRecords;
+      renderCalendar();
+      if (selectedCalendarDate) showCalendarDay(selectedCalendarDate);
       sexEntries.textContent = "";
       if (!sexRecords.length) {
         sexEntries.innerHTML = "<p class='muted'>Todavía no hay relaciones registradas.</p>";
