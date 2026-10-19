@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fff8f5">
+  <title>Mi Ciclo · Tu espacio íntimo</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #fff1f4; --panel: #fffaf2; --text: #59414a; --muted: #967985;
+      --accent: #c98fa2; --border: #ead4da; --soft-rose: #f7e5e9;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; min-height: 100vh;
+      background: radial-gradient(ellipse at 12% 0%, #f5dbe3 0%, transparent 36rem), linear-gradient(180deg, #fff0f3 0%, var(--bg) 55%, #fff7f3 100%);
+      color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 28px 16px; line-height: 1.55; -webkit-font-smoothing: antialiased;
+    }
+    main { max-width: 960px; margin: auto; }
+    header { text-align: center; padding: 20px 0 26px; }
+    .moon { display: inline-flex; width: 48px; height: 48px; align-items: center; justify-content: center; border: 1px solid #e8cbd4; border-radius: 50%; color: #87586a; background: rgba(255,250,242,.85); font-size: 27px; box-shadow: 0 5px 18px rgba(111,69,83,.06); }
+    h1 { margin: 12px 0 5px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(32px,8vw,39px); font-weight: 500; letter-spacing: -.8px; color: #704b5a; }
+    .subtitle, .muted { color: var(--muted); line-height: 1.65; }
+    .subtitle { margin: 5px auto 0; max-width: 330px; font-size: 15px; }
+    .panel { min-width: 0; background: rgba(255,250,242,.96); border: 1px solid var(--border); border-radius: 23px; padding: 24px; margin: 0; box-shadow: 0 12px 32px rgba(111,69,83,.075); }
+    #authPanel { max-width: 560px; margin: 0 auto; }
+    #appPanel:not(.hidden) { display: block; }
+    .tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0 auto 18px; }
+    .tabs button { width: auto; margin: 0; padding: 10px 16px; border-radius: 999px; background: #fffaf2; color: #87586a; border-color: #dfc2cc; box-shadow: none; }
+    .tabs button[aria-selected="true"] { background: #c98fa2; color: #fffaf7; border-color: #c98fa2; }
+    #appPanel > .panel { margin-bottom: 16px; }
+    #appPanel > .panel.hidden { display: none; }
+    h2 { font-family: Georgia, "Times New Roman", serif; font-size: 22px; font-weight: 500; color: #704b5a; margin: 0 0 10px; }
+    label { display: block; margin: 14px 0 7px; font-size: 13px; font-weight: 600; color: #765965; }
+    input, textarea, button { width: 100%; min-width: 0; font: inherit; border-radius: 13px; padding: 12px 13px; }
+    input, textarea, select { color: var(--text); background: #fffdf9; border: 1px solid #e7d2d8; outline: none; transition: border-color .18s ease, box-shadow .18s ease; }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,143,162,.16); }
+    select { width: 100%; border-radius: 13px; padding: 12px 13px; font: inherit; }
+    textarea { resize: vertical; min-height: 85px; }
+    button { border: 1px solid transparent; background: var(--accent); color: #fffaf7; font-weight: 600; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 12px rgba(135,88,106,.10); transition: transform .15s ease, background .15s ease, box-shadow .15s ease; }
+    button:hover { background: #b97c91; box-shadow: 0 6px 16px rgba(135,88,106,.15); }
+    button:active { transform: translateY(1px); }
+    button.secondary { background: transparent; color: #87586a; border: 1px solid #dfc2cc; box-shadow: none; }
+    button.secondary:hover { background: var(--soft-rose); }
+    button:disabled { opacity: .55; cursor: wait; }
+    #authForm { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 12px; }
+    #authForm label, #authForm input, #loginBtn { grid-column: 1 / -1; }
+    #authForm button { margin-top: 9px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .status { margin-top: 15px; font-size: 14px; line-height: 1.5; }
+    .hidden { display: none; }
+    .entry { display: grid; grid-template-columns: minmax(94px,auto) 1fr; align-items: start; gap: 4px 14px; background: #fffdf9; border: 1px solid #ead9dd; border-radius: 14px; padding: 14px 16px; margin: 9px 0; overflow-wrap: anywhere; box-shadow: 0 3px 10px rgba(111,69,83,.025); }
+    .entry strong { display: inline-flex; align-items: center; color: #704b5a; font-size: 14px; font-weight: 650; margin: 0; }
+    .entry p { margin: 0; color: #806875; font-size: 13px; line-height: 1.55; }
+    .entry button { grid-column: 1 / -1; width: auto; justify-self: start; min-width: 140px; margin-top: 8px; padding: 8px 12px; font-size: 13px; }
+    .calendar-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin: 12px 0 18px; }
+    .calendar-head h3 { margin:0; text-align:center; font-family:Georgia,serif; color:#704b5a; font-size:20px; font-weight:500; }
+    .calendar-head button { width:42px; height:40px; margin:0; padding:0; border:1px solid #ead4da; background:#fffdf9; color:#87586a; box-shadow:none; font-size:20px; }
+    .mini-calendar { background:#fffdf9; border:1px solid #ead9dd; border-radius:16px; padding:11px 13px; margin-bottom:13px; max-width:520px; margin-left:auto; margin-right:auto; }
+    .mini-calendar-top { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:5px; }
+    .mini-calendar-top h2 { margin:0; font-size:18px; }
+    .mini-calendar-top button { width:auto; margin:0; padding:5px 9px; font-size:11px; white-space:nowrap; }
+    .mini-calendar-grid { gap:2px; }
+    .mini-calendar-grid .calendar-weekday { padding:2px 0; font-size:9px; }
+    .mini-calendar-grid .calendar-day { min-height:23px; border-radius:6px; font-size:10px; }
+    .mini-calendar-grid .calendar-day.empty { background:transparent; }
+    .mini-calendar .calendar-head { margin:2px 0 6px !important; }
+    .mini-calendar .calendar-head h3 { font-size:16px; }
+    .mini-calendar .hint { font-size:11px; line-height:1.4; }
+    .calendar-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:5px; }
+    .calendar-weekday { text-align:center; padding:7px 0; color:#967985; font-size:11px; font-weight:700; }
+    .calendar-day { min-height:42px; display:flex; align-items:center; justify-content:center; border-radius:12px; border:1px solid transparent; font-size:13px; color:#59414a; background:#fffdf9; }
+    .calendar-day.empty { background:transparent; }
+    .calendar-day.today { border-color:#b97c91; font-weight:700; }
+    .calendar-day.actual { background:#c98fa2; color:white; font-weight:700; }
+    .calendar-day.predicted { background:#fff0f4; border:1px dashed #b97c91; color:#87586a; font-weight:700; }
+    .calendar-day.fertile { background:#f7e9ef; color:#87586a; }
+    .calendar-legend { display:flex; flex-wrap:wrap; gap:8px 14px; margin-top:16px; color:#806875; font-size:12px; }
+    .legend-item { display:inline-flex; align-items:center; gap:6px; }
+    .legend-dot { width:10px; height:10px; border-radius:4px; display:inline-block; background:#c98fa2; }
+    .legend-dot.predicted { background:#fff0f4; border:1px dashed #b97c91; }
+    .legend-dot.fertile { background:#f7e9ef; }
+    .stats { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }
+    .stat { min-width: 0; background: #fffdf8; border: 1px solid #ead9dd; border-radius: 17px; padding: 15px; }
+    .stat strong { display: block; font-family: Georgia, "Times New Roman", serif; font-size: 23px; font-weight: 500; margin: 5px 0; color: #87586a; overflow-wrap: anywhere; }
+    .stat span { color: var(--muted); font-size: 12px; }
+    .chart { width: 100%; height: 180px; padding: 8px 0 0; overflow: hidden; }
+    .chart svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    .chart-label { font-size: 11px; fill: var(--muted); }
+    .pill { display: inline-block; border: 1px solid var(--border); border-radius: 99px; padding: 3px 9px; font-size: 12px; color: #87586a; background: #fff5f6; margin-bottom: 6px; }
+    .hint { font-size: 13px; color: var(--muted); line-height: 1.65; }
+    footer { text-align: center; color: var(--muted); font-size: 12px; padding: 27px 8px; }
+    @media (max-width: 680px) {
+      body { padding: 18px 12px; }
+      main { max-width: 540px; }
+      #appPanel > .panel { margin-bottom: 14px; }
+      .tabs { gap: 7px; }
+      .tabs button { padding: 9px 12px; font-size: 14px; }
+      .panel { padding: 20px; border-radius: 19px; }
+      .entry { grid-template-columns: 1fr; gap: 5px; }
+      .calendar-day { min-height: 36px; border-radius: 9px; }
+    }
+    @media (max-width: 360px) { .panel { padding: 16px; } #authForm { grid-template-columns: minmax(0,1fr); } #authForm button { grid-column: 1 / -1; } .stats { grid-template-columns: 1fr; } }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="moon" aria-hidden="true">✿</div>
+    <h1>Mi Ciclo</h1>
+    <p class="subtitle">Un espacio íntimo para escucharte y conocerte.</p>
+  </header>
+
+  <section id="authPanel" class="panel">
+    <h2>Tu espacio privado</h2>
+    <p class="muted">Entra en tu cuenta o crea una nueva para empezar.</p>
+    <form id="authForm">
+      <label for="email">Correo electrónico</label>
+      <input id="email" type="email" autocomplete="email" required>
+      <label for="password">Contraseña</label>
+      <input id="password" type="password" autocomplete="current-password"
+             minlength="8" required>
+      <button id="loginBtn" type="submit">Iniciar sesión</button>
+      <button id="registerBtn" class="secondary" type="button">Crear cuenta</button>
+      <button id="resetBtn" class="secondary" type="button">Recuperar contraseña</button>
+    </form>
+    <p id="authStatus" class="status" role="status"></p>
+  </section>
+
+  <nav id="appTabs" class="tabs hidden" aria-label="Secciones de Mi Ciclo" role="tablist">
+    <button type="button" role="tab" data-tab="resumen" aria-selected="true">Resumen</button>
+    <button type="button" role="tab" data-tab="calendario" aria-selected="false">Calendario</button>
+    <button type="button" role="tab" data-tab="ciclo" aria-selected="false">Mi ciclo</button>
+    <button type="button" role="tab" data-tab="relaciones" aria-selected="false">Relaciones</button>
+    <button type="button" role="tab" data-tab="historial" aria-selected="false">Historial</button>
+  </nav>
+
+  <section id="appPanel" class="hidden">
+    <div class="panel hidden" data-tab-panel="calendario">
+      <h2>Tu calendario</h2>
+      <p class="hint">Consulta tus fechas registradas y las estimaciones orientativas de tu ciclo.</p>
+      <div class="calendar-head">
+        <button type="button" class="secondary" id="prevMonth" aria-label="Mes anterior">‹</button>
+        <h3 id="calendarTitle">Mes y año</h3>
+        <button type="button" class="secondary" id="nextMonth" aria-label="Mes siguiente">›</button>
+      </div>
+      <div class="calendar-grid" id="calendarGrid" aria-label="Calendario mensual"></div>
+      <div class="calendar-legend">
+        <span class="legend-item"><i class="legend-dot"></i> Menstruación registrada</span>
+        <span class="legend-item"><i class="legend-dot predicted"></i> Próxima fecha estimada</span>
+        <span class="legend-item"><i class="legend-dot fertile"></i> Ventana fértil estimada</span>
+      </div>
+      <p class="hint">Las fechas estimadas son orientativas y no sirven para evitar un embarazo.</p>
+    </div>
+    <div class="panel hidden" data-tab-panel="ciclo">
+      <h2>Registrar menstruación</h2>
+      <p class="muted">Anota el primer día de tu menstruación y, si quieres, cómo te encuentras.</p>
+      <form id="cycleForm">
+        <label for="periodDate">Primer día de la menstruación</label>
+        <input id="periodDate" type="date" required>
+        <label for="mood">¿Cómo te has sentido? (opcional)</label>
+        <select id="mood">
+          <option value="">Prefiero no indicarlo</option>
+          <option value="Muy bien">😊 Muy bien</option>
+          <option value="Tranquila">🌷 Tranquila</option>
+          <option value="Sensible">💗 Sensible</option>
+          <option value="Irritable">🌦️ Irritable</option>
+          <option value="Ansiosa">🫧 Ansiosa</option>
+          <option value="Cansada">🌙 Cansada</option>
+          <option value="Triste">🌧️ Triste</option>
+        </select>
+        <label for="symptoms">Síntomas, molestias o nota personal (opcional)</label>
+        <textarea id="symptoms" maxlength="2000"
+          placeholder="Puedes anotar síntomas, energía o escribir unas líneas en tu diario…"></textarea>
+        <button id="saveBtn" type="submit">Guardar registro</button>
+      </form>
+      <p id="saveStatus" class="status" role="status"></p>
+    </div>
+    <div class="panel" data-tab-panel="resumen">
+      <div class="mini-calendar">
+        <div class="mini-calendar-top">
+          <h2>Tu mes en un vistazo</h2>
+          <button type="button" class="secondary" id="openFullCalendar">Ver calendario</button>
+        </div>
+        <div class="calendar-head" style="margin:4px 0 10px">
+          <h3 id="miniCalendarTitle">Mes y año</h3>
+        </div>
+        <div class="calendar-grid mini-calendar-grid" id="miniCalendarGrid" aria-label="Calendario mensual resumido"></div>
+        <p class="hint" style="margin:10px 0 0">Rosa: menstruación registrada · Rosa claro: días fértiles estimados</p>
+      </div>
+      <h2>Resumen de tu ciclo</h2>
+      <div class="stats">
+        <div class="stat"><span>Duración media</span><strong id="avgCycle">—</strong><span>días por ciclo</span></div>
+        <div class="stat"><span>Próxima menstruación</span><strong id="nextPeriod">—</strong><span id="predictionNote">Se calculará con tus registros</span></div>
+      </div>
+      <p id="fertileEstimate" class="hint">La estimación de ovulación necesita varios ciclos registrados.</p>
+    </div>
+    <div class="panel" data-tab-panel="resumen">
+      <h2>Gráfico de tus ciclos</h2>
+      <p class="hint">Duración aproximada entre los primeros días de menstruaciones registradas.</p>
+      <div id="cycleChart" class="chart" aria-label="Gráfico de duración de los ciclos"></div>
+      <p id="chartNote" class="hint">Registra al menos dos menstruaciones para ver el gráfico.</p>
+    </div>
+    <div class="panel hidden" data-tab-panel="relaciones">
+      <h2>Registrar relación sexual</h2>
+      <p class="muted">Este apartado es opcional y privado en tu cuenta.</p>
+      <form id="sexForm">
+        <label for="sexDate">Fecha</label>
+        <input id="sexDate" type="date" required>
+        <label for="protection">Protección utilizada</label>
+        <select id="protection">
+          <option value="No indicado">Prefiero no indicarlo</option>
+          <option value="Preservativo">Preservativo</option>
+          <option value="Otro método">Otro método</option>
+          <option value="Sin protección">Sin protección</option>
+          <option value="No lo recuerdo">No lo recuerdo</option>
+        </select>
+        <label for="contraception">Método anticonceptivo (opcional)</label>
+        <input id="contraception" type="text" maxlength="120" placeholder="Por ejemplo, píldora, DIU…">
+        <label for="ejaculation">¿Hubo eyaculación dentro de la vagina?</label>
+        <select id="ejaculation">
+          <option value="No indicado">Prefiero no indicarlo</option>
+          <option value="Sí">Sí</option>
+          <option value="No">No</option>
+          <option value="No lo sé">No lo sé</option>
+        </select>
+        <label for="incident">Incidencias (opcional)</label>
+        <select id="incident">
+          <option value="Ninguna indicada">Ninguna indicada</option>
+          <option value="Rotura o deslizamiento del preservativo">Rotura o deslizamiento del preservativo</option>
+          <option value="Posible fallo anticonceptivo">Posible fallo anticonceptivo</option>
+          <option value="Otra incidencia">Otra incidencia</option>
+        </select>
+        <label for="sexNotes">Notas personales (opcional)</label>
+        <textarea id="sexNotes" maxlength="1500" placeholder="Notas que quieras recordar…"></textarea>
+        <button id="sexSaveBtn" type="submit">Guardar relación</button>
+      </form>
+      <p id="sexStatus" class="status" role="status"></p>
+      <p class="hint">Si hubo una posible incidencia anticonceptiva y te preocupa un embarazo, las predicciones no pueden descartarlo. Consulta cuanto antes con un profesional sanitario o una farmacia para conocer las opciones según el tiempo transcurrido.</p>
+    </div>
+    <div class="panel hidden" data-tab-panel="relaciones">
+      <h2>Mis relaciones registradas</h2>
+      <div id="sexEntries"><p class="muted">Cargando…</p></div>
+    </div>
+    <div class="panel" data-tab-panel="resumen">
+      <h2>Últimos registros</h2>
+      <p class="hint">Tus anotaciones más recientes, para tenerlas a mano al entrar.</p>
+      <div id="recentEntries"><p class="muted">Cargando tus registros…</p></div>
+    </div>
+    <div class="panel hidden" data-tab-panel="historial">
+      <h2>Mis registros menstruales</h2>
+      <div id="entries"><p class="muted">Cargando tus registros…</p></div>
+    </div>
+    <div class="panel hidden" data-tab-panel="historial">
+      <h2>Mis datos y privacidad</h2>
+      <p id="accountInfo" class="muted"></p>
+      <p class="hint">Puedes guardar una copia de tus registros en tu dispositivo. El archivo incluirá información íntima: guárdalo en un lugar seguro.</p>
+      <button id="exportBtn" class="secondary" type="button">Descargar copia de mis registros</button>
+      <p id="exportStatus" class="status" role="status"></p>
+      <button id="logoutBtn" class="secondary" type="button">Cerrar sesión</button>
+    </div>
+  </section>
+
+  <footer>
+    Tus datos son íntimos. Las estimaciones del ciclo no sirven como método anticonceptivo.
+  </footer>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAjQ49N1t3nJtAlviSM_48VY596zHlrtu0",
+    authDomain: "mi-ciclo-9f22a.firebaseapp.com",
+    databaseURL: "https://mi-ciclo-9f22a-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "mi-ciclo-9f22a",
+    storageBucket: "mi-ciclo-9f22a.firebasestorage.app",
+    messagingSenderId: "619985665447",
+    appId: "1:619985665447:web:ca842e03b239fbd84e8a82"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
+
+  const authPanel = document.getElementById("authPanel");
+  const appPanel = document.getElementById("appPanel");
+  const authStatus = document.getElementById("authStatus");
+  const saveStatus = document.getElementById("saveStatus");
+  const entries = document.getElementById("entries");
+  const sexEntries = document.getElementById("sexEntries");
+  const recentEntries = document.getElementById("recentEntries");
+  const sexStatus = document.getElementById("sexStatus");
+  const authForm = document.getElementById("authForm");
+  const appTabs = document.getElementById("appTabs");
+  let calendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  let calendarRecords = [];
+  let loadedCycleRecords = [];
+  let loadedSexRecords = [];
+  document.getElementById("prevMonth").addEventListener("click", () => { calendarMonth.setMonth(calendarMonth.getMonth() - 1); renderCalendar(); });
+  document.getElementById("nextMonth").addEventListener("click", () => { calendarMonth.setMonth(calendarMonth.getMonth() + 1); renderCalendar(); });
+
+  function selectTab(name) {
+    appTabs.querySelectorAll("[data-tab]").forEach(button => {
+      const selected = button.dataset.tab === name;
+      button.setAttribute("aria-selected", String(selected));
+      button.tabIndex = selected ? 0 : -1;
+    });
+    appPanel.querySelectorAll("[data-tab-panel]").forEach(panel => {
+      panel.classList.toggle("hidden", panel.dataset.tabPanel !== name);
+    });
+  }
+  appTabs.querySelectorAll("[data-tab]").forEach(button => {
+    button.addEventListener("click", () => selectTab(button.dataset.tab));
+  });
+  document.getElementById("openFullCalendar").addEventListener("click", () => selectTab("calendario"));
+  selectTab("calendario");
+
+  function showAuthMessage(message) {
+    authStatus.textContent = message;
+  }
+
+  function friendlyError(error) {
+    const messages = {
+      "auth/email-already-in-use": "Ese correo ya tiene una cuenta. Prueba a iniciar sesión.",
+      "auth/invalid-email": "Comprueba el formato del correo electrónico.",
+      "auth/weak-password": "Elige una contraseña más segura, de al menos 8 caracteres.",
+      "auth/invalid-credential": "No se ha podido iniciar sesión. Comprueba el correo y la contraseña.",
+      "auth/too-many-requests": "Hay demasiados intentos. Espera un poco y vuelve a probar.",
+      "auth/network-request-failed": "No hay conexión. Comprueba tu internet e inténtalo de nuevo."
+    };
+    return messages[error.code] || "No se ha podido completar la operación. Código: " + error.code;
+  }
+
+  authForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const button = document.getElementById("loginBtn");
+    button.disabled = true;
+    showAuthMessage("Comprobando tu cuenta…");
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+    } catch (error) {
+      showAuthMessage(friendlyError(error));
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  document.getElementById("registerBtn").addEventListener("click", async () => {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    if (!email || password.length < 8) {
+      showAuthMessage("Introduce tu correo y una contraseña de al menos 8 caracteres.");
+      return;
+    }
+    try {
+      showAuthMessage("Creando tu cuenta…");
+      const credential = await auth.createUserWithEmailAndPassword(email, password);
+      await credential.user.sendEmailVerification();
+      showAuthMessage("Cuenta creada. Revisa tu correo para verificar la dirección.");
+    } catch (error) {
+      showAuthMessage(friendlyError(error));
+    }
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", async () => {
+    const email = document.getElementById("email").value.trim();
+    if (!email) {
+      showAuthMessage("Escribe primero tu correo electrónico.");
+      return;
+    }
+    try {
+      await auth.sendPasswordResetEmail(email);
+      showAuthMessage("Si la cuenta existe, recibirás instrucciones para restablecer la contraseña.");
+    } catch (error) {
+      showAuthMessage(friendlyError(error));
+    }
+  });
+
+
+  document.getElementById("exportBtn").addEventListener("click", async () => {
+    const user = auth.currentUser;
+    const status = document.getElementById("exportStatus");
+    if (!user) { status.textContent = "Inicia sesión para exportar tus registros."; return; }
+    const button = document.getElementById("exportBtn");
+    button.disabled = true;
+    status.textContent = "Preparando tu copia…";
+    try {
+      const [cycleSnapshot, sexSnapshot] = await Promise.all([
+        db.ref("users/" + user.uid + "/cycleEntries").once("value"),
+        db.ref("users/" + user.uid + "/sexualEntries").once("value")
+      ]);
+      const cycles = Object.entries(cycleSnapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
+      const relationships = Object.entries(sexSnapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
+      const backup = {
+        app: "Mi Ciclo",
+        exportedAt: new Date().toISOString(),
+        note: "Copia privada de tus registros. Guárdala en un lugar seguro.",
+        menstrualRecords: cycles,
+        relationshipRecords: relationships
+      };
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "mi-ciclo-copia-" + new Date().toISOString().slice(0,10) + ".json";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      status.textContent = "Copia preparada. Comprueba que se ha descargado en tu dispositivo.";
+    } catch (error) {
+      status.textContent = "No se pudo preparar la copia. Código: " + (error.code || "error");
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", () => auth.signOut());
+
+  auth.onAuthStateChanged((user) => {
+    authPanel.classList.toggle("hidden", !!user);
+    appPanel.classList.toggle("hidden", !user);
+    appTabs.classList.toggle("hidden", !user);
+    if (user) {
+      selectTab("calendario");
+      document.getElementById("accountInfo").textContent =
+        "Sesión iniciada con " + user.email;
+      loadEntries(user.uid);
+    } else {
+      entries.textContent = "";
+    }
+  });
+
+  function formatDate(dateString) {
+    if (!dateString) return "—";
+    const parts = dateString.split("-");
+    return parts.length === 3 ? parts[2] + "/" + parts[1] + "/" + parts[0] : dateString;
+  }
+
+  function renderCalendar() {
+    const grid = document.getElementById("calendarGrid");
+    const title = document.getElementById("calendarTitle");
+    if (!grid || !title) return;
+    const year = calendarMonth.getFullYear(), month = calendarMonth.getMonth();
+    title.textContent = calendarMonth.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+    title.textContent = title.textContent.charAt(0).toLocaleUpperCase("es-ES") + title.textContent.slice(1);
+    grid.textContent = "";
+    ["L","M","X","J","V","S","D"].forEach(day => {
+      const label = document.createElement("div"); label.className = "calendar-weekday"; label.textContent = day; grid.appendChild(label);
+    });
+    const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    for (let i = 0; i < firstWeekday; i++) { const empty = document.createElement("div"); empty.className = "calendar-day empty"; grid.appendChild(empty); }
+    const actualDates = new Set(calendarRecords.map(r => r.periodDate).filter(Boolean));
+    const sorted = [...actualDates].sort();
+    const lengths = [];
+    for (let i = 1; i < sorted.length; i++) {
+      const days = Math.round((new Date(sorted[i] + "T12:00:00") - new Date(sorted[i - 1] + "T12:00:00")) / 86400000);
+      if (days >= 15 && days <= 60) lengths.push(days);
+    }
+    const avg = lengths.length ? Math.round(lengths.reduce((sum, days) => sum + days, 0) / lengths.length) : null;
+    let predicted = null, fertileStart = null, fertileEnd = null;
+    if (avg && sorted.length) {
+      predicted = new Date(sorted[sorted.length - 1] + "T12:00:00"); predicted.setDate(predicted.getDate() + avg);
+      const ovulation = new Date(predicted); ovulation.setDate(ovulation.getDate() - 14);
+      fertileStart = new Date(ovulation); fertileStart.setDate(fertileStart.getDate() - 5);
+      fertileEnd = new Date(ovulation); fertileEnd.setDate(fertileEnd.getDate() + 1);
+    }
+    const dateKey = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    const today = dateKey(new Date());
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day, 12);
+      const key = dateKey(date);
+      const cell = document.createElement("div"); cell.className = "calendar-day"; cell.textContent = day;
+      if (key === today) cell.classList.add("today");
+      if (actualDates.has(key)) { cell.classList.add("actual"); cell.title = "Menstruación registrada"; }
+      else if (predicted && key === dateKey(predicted)) { cell.classList.add("predicted"); cell.title = "Próxima menstruación estimada"; }
+      else if (fertileStart && date >= new Date(fertileStart.getFullYear(), fertileStart.getMonth(), fertileStart.getDate(), 12) && date <= new Date(fertileEnd.getFullYear(), fertileEnd.getMonth(), fertileEnd.getDate(), 12)) { cell.classList.add("fertile"); cell.title = "Ventana fértil estimada"; }
+      grid.appendChild(cell);
+    }
+    const miniGrid = document.getElementById("miniCalendarGrid");
+    const miniTitle = document.getElementById("miniCalendarTitle");
+    if (miniGrid && miniTitle) {
+      miniTitle.textContent = title.textContent;
+      miniGrid.textContent = "";
+      Array.from(grid.children).forEach(node => miniGrid.appendChild(node.cloneNode(true)));
+    }
+  }
+
+  function renderCycleSummary(records) {
+    calendarRecords = records.slice();
+    renderCalendar();
+    const dates = [...new Set(records.map(r => r.periodDate).filter(Boolean))].sort();
+    const lengths = [];
+    for (let i = 1; i < dates.length; i++) {
+      const days = Math.round((new Date(dates[i] + "T12:00:00") - new Date(dates[i - 1] + "T12:00:00")) / 86400000);
+      if (days >= 15 && days <= 60) lengths.push({ start: dates[i - 1], end: dates[i], days });
+    }
+    const avg = lengths.length ? Math.round(lengths.reduce((sum, x) => sum + x.days, 0) / lengths.length) : null;
+    document.getElementById("avgCycle").textContent = avg ? avg + " días" : "—";
+    const nextEl = document.getElementById("nextPeriod");
+    const noteEl = document.getElementById("predictionNote");
+    const fertileEl = document.getElementById("fertileEstimate");
+    if (dates.length && avg) {
+      const next = new Date(dates[dates.length - 1] + "T12:00:00");
+      next.setDate(next.getDate() + avg);
+      const nextString = next.getFullYear() + "-" + String(next.getMonth() + 1).padStart(2, "0") + "-" + String(next.getDate()).padStart(2, "0");
+      nextEl.textContent = formatDate(nextString);
+      noteEl.textContent = "Estimación, no una fecha segura";
+      const ovulation = new Date(next);
+      ovulation.setDate(ovulation.getDate() - 14);
+      const fertileStart = new Date(ovulation);
+      fertileStart.setDate(fertileStart.getDate() - 5);
+      const fertileEnd = new Date(ovulation);
+      fertileEnd.setDate(fertileEnd.getDate() + 1);
+      const fmt = d => formatDate(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"));
+      fertileEl.textContent = lengths.length >= 2
+        ? "Ventana fértil orientativa: " + fmt(fertileStart) + "–" + fmt(fertileEnd) + ". La ovulación real puede variar; no uses esta estimación como anticonceptivo."
+        : "Con más ciclos registrados podremos estimar tendencias. La ventana fértil calculada no es fiable como anticonceptivo.";
+    } else {
+      nextEl.textContent = "—";
+      noteEl.textContent = dates.length ? "Necesitamos otro ciclo para estimar" : "Se calculará con tus registros";
+      fertileEl.textContent = "Registra al menos dos primeros días de menstruación para estimar la duración media. Se recomiendan varios ciclos para observar tendencias.";
+    }
+
+    const chart = document.getElementById("cycleChart");
+    chart.textContent = "";
+    const recent = lengths.slice(-6);
+    if (!recent.length) {
+      document.getElementById("chartNote").textContent = "Registra al menos dos menstruaciones para ver el gráfico.";
+      return;
+    }
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", "0 0 320 170");
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", "Gráfico lineal de duración de los ciclos en días");
+    const minDays = Math.min(...recent.map(x => x.days), avg || 28, 21) - 2;
+    const maxDays = Math.max(...recent.map(x => x.days), avg || 28, 35) + 2;
+    const left = 28, right = 306, top = 20, bottom = 124;
+    const xAt = i => recent.length === 1 ? (left + right) / 2 : left + i * (right - left) / (recent.length - 1);
+    const yAt = value => bottom - (value - minDays) / Math.max(1, maxDays - minDays) * (bottom - top);
+    [minDays, Math.round((minDays + maxDays) / 2), maxDays].forEach(value => {
+      const y = yAt(value);
+      const grid = document.createElementNS(ns, "line");
+      grid.setAttribute("x1", left); grid.setAttribute("x2", right);
+      grid.setAttribute("y1", y); grid.setAttribute("y2", y);
+      grid.setAttribute("stroke", "#ead4da"); grid.setAttribute("stroke-dasharray", "3 4");
+      svg.appendChild(grid);
+      const label = document.createElementNS(ns, "text");
+      label.setAttribute("x", 2); label.setAttribute("y", y + 4);
+      label.setAttribute("font-size", "10"); label.setAttribute("fill", "#967985");
+      label.textContent = value;
+      svg.appendChild(label);
+    });
+    if (avg) {
+      const meanY = yAt(avg);
+      const meanLine = document.createElementNS(ns, "line");
+      meanLine.setAttribute("x1", left); meanLine.setAttribute("x2", right);
+      meanLine.setAttribute("y1", meanY); meanLine.setAttribute("y2", meanY);
+      meanLine.setAttribute("stroke", "#a87989"); meanLine.setAttribute("stroke-width", "1.5");
+      meanLine.setAttribute("stroke-dasharray", "5 4");
+      svg.appendChild(meanLine);
+      const meanLabel = document.createElementNS(ns, "text");
+      meanLabel.setAttribute("x", right - 2); meanLabel.setAttribute("y", meanY - 5);
+      meanLabel.setAttribute("text-anchor", "end"); meanLabel.setAttribute("font-size", "9");
+      meanLabel.setAttribute("fill", "#967985");
+      meanLabel.textContent = "Media: " + avg + " d";
+      svg.appendChild(meanLabel);
+    }
+    const area = document.createElementNS(ns, "path");
+    const points = recent.map((item, i) => [xAt(i), yAt(item.days)]);
+    const linePath = points.map((p, i) => (i ? "L" : "M") + p[0] + " " + p[1]).join(" ");
+    area.setAttribute("d", linePath + " L" + points[points.length - 1][0] + " " + bottom + " L" + points[0][0] + " " + bottom + " Z");
+    area.setAttribute("fill", "#e9afc5"); area.setAttribute("fill-opacity", "0.12");
+    svg.appendChild(area);
+    const line = document.createElementNS(ns, "path");
+    line.setAttribute("d", linePath); line.setAttribute("fill", "none");
+    line.setAttribute("stroke", "#c98fa2"); line.setAttribute("stroke-width", "3");
+    line.setAttribute("stroke-linecap", "round"); line.setAttribute("stroke-linejoin", "round");
+    svg.appendChild(line);
+    recent.forEach((item, i) => {
+      const [x, y] = points[i];
+      const dot = document.createElementNS(ns, "circle");
+      dot.setAttribute("cx", x); dot.setAttribute("cy", y); dot.setAttribute("r", "4.5");
+      dot.setAttribute("fill", "#f7e5e9"); dot.setAttribute("stroke", "#b97c91"); dot.setAttribute("stroke-width", "2");
+      const title = document.createElementNS(ns, "title");
+      title.textContent = item.days + " días · " + formatDate(item.end);
+      dot.appendChild(title); svg.appendChild(dot);
+      const value = document.createElementNS(ns, "text");
+      value.setAttribute("x", x); value.setAttribute("y", y - 10);
+      value.setAttribute("text-anchor", "middle"); value.setAttribute("font-size", "11");
+      value.setAttribute("fill", "#59414a"); value.textContent = item.days + " d";
+      svg.appendChild(value);
+      const dateLabel = document.createElementNS(ns, "text");
+      dateLabel.setAttribute("x", x); dateLabel.setAttribute("y", 148);
+      dateLabel.setAttribute("text-anchor", "middle"); dateLabel.setAttribute("class", "chart-label");
+      dateLabel.textContent = formatDate(item.end).slice(0, 5);
+      svg.appendChild(dateLabel);
+    });
+    chart.appendChild(svg);
+    document.getElementById("chartNote").textContent = "Últimos " + recent.length + " ciclos, del más antiguo al más reciente. La línea discontinua marca la media. Las variaciones son comunes; el gráfico no diagnostica problemas.";
+  }
+
+  async function loadEntries(uid) {
+    entries.innerHTML = "<p class='muted'>Cargando…</p>";
+    sexEntries.innerHTML = "<p class='muted'>Cargando…</p>";
+    try {
+      const [cycleSnapshot, sexSnapshot] = await Promise.all([
+        db.ref("users/" + uid + "/cycleEntries").once("value"),
+        db.ref("users/" + uid + "/sexualEntries").once("value")
+      ]);
+      const records = Object.entries(cycleSnapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
+      records.sort((a, b) => String(b.periodDate || "").localeCompare(String(a.periodDate || "")));
+      loadedCycleRecords = records;
+      renderCycleSummary(records);
+      recentEntries.textContent = "";
+      if (!records.length) {
+        recentEntries.innerHTML = "<p class='muted'>Cuando guardes una menstruación, aparecerá aquí.</p>";
+      } else {
+        records.slice(0, 3).forEach(record => {
+          const item = document.createElement("div");
+          item.className = "entry";
+          const date = document.createElement("strong");
+          date.textContent = formatDate(record.periodDate);
+          item.appendChild(date);
+          if (record.mood) {
+            const mood = document.createElement("p");
+            mood.textContent = "Estado de ánimo: " + record.mood;
+            item.appendChild(mood);
+          }
+          if (record.symptoms) {
+            const note = document.createElement("p");
+            note.textContent = record.symptoms;
+            item.appendChild(note);
+          } else {
+            const note = document.createElement("p");
+            note.textContent = "Sin notas añadidas";
+            item.appendChild(note);
+          }
+          recentEntries.appendChild(item);
+        });
+      }
+      entries.textContent = "";
+      const countNote = document.createElement("p");
+      countNote.className = "hint";
+      countNote.textContent = "Registros cargados desde Firebase: " + records.length;
+      entries.appendChild(countNote);
+      if (!records.length) {
+        entries.innerHTML = "<p class='muted'>Todavía no hay registros menstruales.</p>";
+      } else {
+        records.forEach(record => {
+          const item = document.createElement("div");
+          item.className = "entry";
+          const date = document.createElement("strong");
+          date.textContent = formatDate(record.periodDate);
+          item.appendChild(date);
+          if (record.symptoms) {
+            const note = document.createElement("p");
+            note.textContent = record.symptoms;
+            item.appendChild(note);
+          }
+          entries.appendChild(item);
+        });
+      }
+
+      const sexRecords = [];
+      sexSnapshot.forEach(child => sexRecords.push({ id: child.key, ...child.val() }));
+      sexRecords.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+      loadedSexRecords = sexRecords;
+      sexEntries.textContent = "";
+      if (!sexRecords.length) {
+        sexEntries.innerHTML = "<p class='muted'>Todavía no hay relaciones registradas.</p>";
+      } else {
+        sexRecords.forEach(record => {
+          const item = document.createElement("div");
+          item.className = "entry";
+          const title = document.createElement("strong");
+          title.textContent = formatDate(record.date);
+          item.appendChild(title);
+          const details = document.createElement("p");
+          details.textContent = "Protección: " + (record.protection || "No indicado") +
+            " · Anticoncepción: " + (record.contraception || "No indicado") +
+            " · Eyaculación intravaginal: " + (record.ejaculation || "No indicado") +
+            " · Incidencia: " + (record.incident || "Ninguna indicada");
+          item.appendChild(details);
+          if (record.notes) {
+            const note = document.createElement("p");
+            note.textContent = record.notes;
+            item.appendChild(note);
+          }
+          const del = document.createElement("button");
+          del.type = "button";
+          del.className = "secondary";
+          del.textContent = "Eliminar registro";
+          del.addEventListener("click", async () => {
+            if (!confirm("¿Quieres eliminar este registro de forma permanente?")) return;
+            try {
+              await db.ref("users/" + uid + "/sexualEntries/" + record.id).remove();
+              await loadEntries(uid);
+            } catch (error) {
+              sexStatus.textContent = "No se pudo eliminar. Código: " + error.code;
+            }
+          });
+          item.appendChild(del);
+          sexEntries.appendChild(item);
+        });
+      }
+    } catch (error) {
+      entries.textContent = "";
+      sexEntries.textContent = "";
+      recentEntries.textContent = "";
+      const message = document.createElement("p");
+      message.className = "muted";
+      message.textContent = "No se pudieron cargar todos los registros. Puede que falte autorizar la nueva ruta sexualEntries en las reglas privadas de Firebase. Código: " + error.code;
+      entries.appendChild(message);
+      sexEntries.appendChild(message.cloneNode(true));
+    }
+  }
+
+  document.getElementById("cycleForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const user = auth.currentUser;
+    if (!user) return;
+    const periodDate = document.getElementById("periodDate").value;
+    const symptoms = document.getElementById("symptoms").value.trim();
+    const mood = document.getElementById("mood").value;
+    if (!periodDate) return;
+    const button = document.getElementById("saveBtn");
+    button.disabled = true;
+    saveStatus.textContent = "Guardando…";
+    try {
+      await db.ref("users/" + user.uid + "/cycleEntries").push({
+        periodDate,
+        mood,
+        symptoms,
+        createdAt: firebase.database.ServerValue.TIMESTAMP
+      });
+      saveStatus.textContent = "Registro guardado.";
+      document.getElementById("symptoms").value = "";
+      document.getElementById("mood").value = "";
+      await loadEntries(user.uid);
+    } catch (error) {
+      saveStatus.textContent =
+        "Aún no se puede guardar: primero configuraremos las reglas privadas de la base de datos. Código: " + error.code;
+    } finally {
+      button.disabled = false;
+    }
+  });
+  document.getElementById("sexForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const user = auth.currentUser;
+    if (!user) return;
+    const record = {
+      date: document.getElementById("sexDate").value,
+      protection: document.getElementById("protection").value,
+      contraception: document.getElementById("contraception").value.trim(),
+      ejaculation: document.getElementById("ejaculation").value,
+      incident: document.getElementById("incident").value,
+      notes: document.getElementById("sexNotes").value.trim(),
+      createdAt: firebase.database.ServerValue.TIMESTAMP
+    };
+    if (!record.date) return;
+    const button = document.getElementById("sexSaveBtn");
+    button.disabled = true;
+    sexStatus.textContent = "Guardando…";
+    try {
+      await db.ref("users/" + user.uid + "/sexualEntries").push(record);
+      sexStatus.textContent = "Relación registrada.";
+      document.getElementById("sexForm").reset();
+      await loadEntries(user.uid);
+    } catch (error) {
+      sexStatus.textContent = "No se ha guardado. Primero hay que añadir la ruta sexualEntries a las reglas privadas de Firebase. Código: " + error.code;
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+</script>
+</body>
+</html>
