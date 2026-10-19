@@ -162,9 +162,20 @@
       <form id="cycleForm">
         <label for="periodDate">Primer día de la menstruación</label>
         <input id="periodDate" type="date" required>
-        <label for="symptoms">Síntomas o notas (opcional)</label>
+        <label for="mood">¿Cómo te has sentido? (opcional)</label>
+        <select id="mood">
+          <option value="">Prefiero no indicarlo</option>
+          <option value="Muy bien">😊 Muy bien</option>
+          <option value="Tranquila">🌷 Tranquila</option>
+          <option value="Sensible">💗 Sensible</option>
+          <option value="Irritable">🌦️ Irritable</option>
+          <option value="Ansiosa">🫧 Ansiosa</option>
+          <option value="Cansada">🌙 Cansada</option>
+          <option value="Triste">🌧️ Triste</option>
+        </select>
+        <label for="symptoms">Síntomas, molestias o nota personal (opcional)</label>
         <textarea id="symptoms" maxlength="2000"
-          placeholder="Por ejemplo: molestias, energía, estado de ánimo…"></textarea>
+          placeholder="Puedes anotar síntomas, energía o escribir unas líneas en tu diario…"></textarea>
         <button id="saveBtn" type="submit">Guardar registro</button>
       </form>
       <p id="saveStatus" class="status" role="status"></p>
@@ -245,7 +256,11 @@
       <div id="entries"><p class="muted">Cargando tus registros…</p></div>
     </div>
     <div class="panel hidden" data-tab-panel="historial">
+      <h2>Mis datos y privacidad</h2>
       <p id="accountInfo" class="muted"></p>
+      <p class="hint">Puedes guardar una copia de tus registros en tu dispositivo. El archivo incluirá información íntima: guárdalo en un lugar seguro.</p>
+      <button id="exportBtn" class="secondary" type="button">Descargar copia de mis registros</button>
+      <p id="exportStatus" class="status" role="status"></p>
       <button id="logoutBtn" class="secondary" type="button">Cerrar sesión</button>
     </div>
   </section>
@@ -285,6 +300,8 @@
   const appTabs = document.getElementById("appTabs");
   let calendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   let calendarRecords = [];
+  let loadedCycleRecords = [];
+  let loadedSexRecords = [];
   document.getElementById("prevMonth").addEventListener("click", () => { calendarMonth.setMonth(calendarMonth.getMonth() - 1); renderCalendar(); });
   document.getElementById("nextMonth").addEventListener("click", () => { calendarMonth.setMonth(calendarMonth.getMonth() + 1); renderCalendar(); });
 
@@ -364,6 +381,45 @@
       showAuthMessage("Si la cuenta existe, recibirás instrucciones para restablecer la contraseña.");
     } catch (error) {
       showAuthMessage(friendlyError(error));
+    }
+  });
+
+
+  document.getElementById("exportBtn").addEventListener("click", async () => {
+    const user = auth.currentUser;
+    const status = document.getElementById("exportStatus");
+    if (!user) { status.textContent = "Inicia sesión para exportar tus registros."; return; }
+    const button = document.getElementById("exportBtn");
+    button.disabled = true;
+    status.textContent = "Preparando tu copia…";
+    try {
+      const [cycleSnapshot, sexSnapshot] = await Promise.all([
+        db.ref("users/" + user.uid + "/cycleEntries").once("value"),
+        db.ref("users/" + user.uid + "/sexualEntries").once("value")
+      ]);
+      const cycles = Object.entries(cycleSnapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
+      const relationships = Object.entries(sexSnapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
+      const backup = {
+        app: "Mi Ciclo",
+        exportedAt: new Date().toISOString(),
+        note: "Copia privada de tus registros. Guárdala en un lugar seguro.",
+        menstrualRecords: cycles,
+        relationshipRecords: relationships
+      };
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "mi-ciclo-copia-" + new Date().toISOString().slice(0,10) + ".json";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      status.textContent = "Copia preparada. Comprueba que se ha descargado en tu dispositivo.";
+    } catch (error) {
+      status.textContent = "No se pudo preparar la copia. Código: " + (error.code || "error");
+    } finally {
+      button.disabled = false;
     }
   });
 
@@ -564,6 +620,7 @@
       ]);
       const records = Object.entries(cycleSnapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
       records.sort((a, b) => String(b.periodDate || "").localeCompare(String(a.periodDate || "")));
+      loadedCycleRecords = records;
       renderCycleSummary(records);
       recentEntries.textContent = "";
       if (!records.length) {
@@ -575,6 +632,11 @@
           const date = document.createElement("strong");
           date.textContent = formatDate(record.periodDate);
           item.appendChild(date);
+          if (record.mood) {
+            const mood = document.createElement("p");
+            mood.textContent = "Estado de ánimo: " + record.mood;
+            item.appendChild(mood);
+          }
           if (record.symptoms) {
             const note = document.createElement("p");
             note.textContent = record.symptoms;
@@ -612,7 +674,8 @@
 
       const sexRecords = [];
       sexSnapshot.forEach(child => sexRecords.push({ id: child.key, ...child.val() }));
-      sexRecords.sort((a, b) => b.date.localeCompare(a.date));
+      sexRecords.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+      loadedSexRecords = sexRecords;
       sexEntries.textContent = "";
       if (!sexRecords.length) {
         sexEntries.innerHTML = "<p class='muted'>Todavía no hay relaciones registradas.</p>";
@@ -669,6 +732,7 @@
     if (!user) return;
     const periodDate = document.getElementById("periodDate").value;
     const symptoms = document.getElementById("symptoms").value.trim();
+    const mood = document.getElementById("mood").value;
     if (!periodDate) return;
     const button = document.getElementById("saveBtn");
     button.disabled = true;
@@ -676,11 +740,13 @@
     try {
       await db.ref("users/" + user.uid + "/cycleEntries").push({
         periodDate,
+        mood,
         symptoms,
         createdAt: firebase.database.ServerValue.TIMESTAMP
       });
       saveStatus.textContent = "Registro guardado.";
       document.getElementById("symptoms").value = "";
+      document.getElementById("mood").value = "";
       await loadEntries(user.uid);
     } catch (error) {
       saveStatus.textContent =
