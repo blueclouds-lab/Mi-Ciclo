@@ -279,7 +279,7 @@
   appTabs.querySelectorAll("[data-tab]").forEach(button => {
     button.addEventListener("click", () => selectTab(button.dataset.tab));
   });
-  selectTab("resumen");
+  selectTab("calendario");
 
   function showAuthMessage(message) {
     authStatus.textContent = message;
@@ -351,7 +351,7 @@
     appPanel.classList.toggle("hidden", !user);
     appTabs.classList.toggle("hidden", !user);
     if (user) {
-      selectTab("resumen");
+      selectTab("calendario");
       document.getElementById("accountInfo").textContent =
         "Sesión iniciada con " + user.email;
       loadEntries(user.uid);
