@@ -378,7 +378,7 @@
       ]);
       const records = [];
       cycleSnapshot.forEach(child => records.push({ id: child.key, ...child.val() }));
-      records.sort((a, b) => b.periodDate.localeCompare(a.periodDate));
+      records.sort((a, b) => String(b.periodDate || "").localeCompare(String(a.periodDate || "")));
       renderCycleSummary(records);
       entries.textContent = "";
       if (!records.length) {
