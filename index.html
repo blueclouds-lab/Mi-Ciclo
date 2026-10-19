@@ -135,6 +135,7 @@
     <button type="button" role="tab" data-tab="resumen" aria-selected="true">Resumen</button>
     <button type="button" role="tab" data-tab="calendario" aria-selected="false">Calendario</button>
     <button type="button" role="tab" data-tab="ciclo" aria-selected="false">Mi ciclo</button>
+    <button type="button" role="tab" data-tab="diario" aria-selected="false">Diario</button>
     <button type="button" role="tab" data-tab="relaciones" aria-selected="false">Relaciones</button>
     <button type="button" role="tab" data-tab="historial" aria-selected="false">Historial</button>
   </nav>
@@ -204,6 +205,36 @@
       <p class="hint">Duración aproximada entre los primeros días de menstruaciones registradas.</p>
       <div id="cycleChart" class="chart" aria-label="Gráfico de duración de los ciclos"></div>
       <p id="chartNote" class="hint">Registra al menos dos menstruaciones para ver el gráfico.</p>
+    </div>
+    <div class="panel hidden" data-tab-panel="diario">
+      <h2>Mi diario personal</h2>
+      <p class="muted">Un espacio solo para ti. Escribe lo que te apetezca recordar, sin necesidad de registrar tu ciclo.</p>
+      <form id="diaryForm">
+        <label for="diaryDate">Fecha</label>
+        <input id="diaryDate" type="date" required>
+        <label for="diaryTitle">Título (opcional)</label>
+        <input id="diaryTitle" type="text" maxlength="100" placeholder="Un día para recordar…">
+        <label for="diaryMood">¿Cómo me siento? (opcional)</label>
+        <select id="diaryMood">
+          <option value="">Prefiero no indicarlo</option>
+          <option value="Feliz">😊 Feliz</option>
+          <option value="Tranquila">🌷 Tranquila</option>
+          <option value="Agradecida">💗 Agradecida</option>
+          <option value="Sensible">🌸 Sensible</option>
+          <option value="Estresada">🫧 Estresada</option>
+          <option value="Cansada">🌙 Cansada</option>
+          <option value="Triste">🌧️ Triste</option>
+          <option value="Enfadada">🌦️ Enfadada</option>
+          <option value="Confundida">☁️ Confundida</option>
+        </select>
+        <label for="diaryText">Lo que quiero contarme</label>
+        <textarea id="diaryText" maxlength="8000" rows="6" required placeholder="Escribe aquí tus pensamientos, emociones, recuerdos o cualquier cosa que necesites sacar…"></textarea>
+        <button id="diarySaveBtn" type="submit">Guardar en mi diario</button>
+      </form>
+      <p id="diaryStatus" class="status" role="status"></p>
+      <h2 style="margin-top:28px">Mis páginas</h2>
+      <p class="hint">Tus anotaciones más recientes aparecerán aquí. Puedes borrar cualquier página cuando quieras.</p>
+      <div id="diaryEntries"><p class="muted">Cargando tu diario…</p></div>
     </div>
     <div class="panel hidden" data-tab-panel="relaciones">
       <h2>Registrar relación sexual</h2>
@@ -296,6 +327,8 @@
   const sexEntries = document.getElementById("sexEntries");
   const recentEntries = document.getElementById("recentEntries");
   const sexStatus = document.getElementById("sexStatus");
+  const diaryEntries = document.getElementById("diaryEntries");
+  const diaryStatus = document.getElementById("diaryStatus");
   const authForm = document.getElementById("authForm");
   const appTabs = document.getElementById("appTabs");
   let calendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
@@ -393,18 +426,21 @@
     button.disabled = true;
     status.textContent = "Preparando tu copia…";
     try {
-      const [cycleSnapshot, sexSnapshot] = await Promise.all([
+      const [cycleSnapshot, sexSnapshot, diarySnapshot] = await Promise.all([
         db.ref("users/" + user.uid + "/cycleEntries").once("value"),
-        db.ref("users/" + user.uid + "/sexualEntries").once("value")
+        db.ref("users/" + user.uid + "/sexualEntries").once("value"),
+        db.ref("users/" + user.uid + "/diaryEntries").once("value")
       ]);
       const cycles = Object.entries(cycleSnapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
       const relationships = Object.entries(sexSnapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
+      const diary = Object.entries(diarySnapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
       const backup = {
         app: "Mi Ciclo",
         exportedAt: new Date().toISOString(),
         note: "Copia privada de tus registros. Guárdala en un lugar seguro.",
         menstrualRecords: cycles,
-        relationshipRecords: relationships
+        relationshipRecords: relationships,
+        diaryEntries: diary
       };
       const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json;charset=utf-8" });
       const url = URL.createObjectURL(blob);
@@ -423,7 +459,94 @@
     }
   });
 
+  document.getElementById("diaryForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const user = auth.currentUser;
+    if (!user) return;
+    const record = {
+      date: document.getElementById("diaryDate").value,
+      title: document.getElementById("diaryTitle").value.trim(),
+      mood: document.getElementById("diaryMood").value,
+      text: document.getElementById("diaryText").value.trim(),
+      createdAt: firebase.database.ServerValue.TIMESTAMP
+    };
+    if (!record.date || !record.text) {
+      diaryStatus.textContent = "Añade una fecha y algo de texto para guardar la página.";
+      return;
+    }
+    const button = document.getElementById("diarySaveBtn");
+    button.disabled = true;
+    diaryStatus.textContent = "Guardando tu página…";
+    try {
+      await db.ref("users/" + user.uid + "/diaryEntries").push(record);
+      diaryStatus.textContent = "Tu página se ha guardado en tu diario. 💗";
+      document.getElementById("diaryTitle").value = "";
+      document.getElementById("diaryMood").value = "";
+      document.getElementById("diaryText").value = "";
+      await loadDiaryEntries(user.uid);
+    } catch (error) {
+      diaryStatus.textContent = "No se ha podido guardar. Puede que las reglas privadas de Firebase aún no permitan el diario. Código: " + (error.code || "error");
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  async function loadDiaryEntries(uid) {
+    if (!diaryEntries) return;
+    diaryEntries.innerHTML = "<p class='muted'>Cargando tu diario…</p>";
+    try {
+      const snapshot = await db.ref("users/" + uid + "/diaryEntries").once("value");
+      const records = Object.entries(snapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
+      records.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")) || Number(b.createdAt || 0) - Number(a.createdAt || 0));
+      diaryEntries.textContent = "";
+      if (!records.length) {
+        diaryEntries.innerHTML = "<p class='muted'>Todavía no has escrito ninguna página. Cuando quieras, empieza por cómo te sientes hoy.</p>";
+        return;
+      }
+      records.forEach(record => {
+        const item = document.createElement("article");
+        item.className = "entry";
+        const heading = document.createElement("strong");
+        heading.textContent = (record.title ? record.title + " · " : "") + formatDate(record.date);
+        item.appendChild(heading);
+        if (record.mood) {
+          const mood = document.createElement("p");
+          mood.textContent = "Hoy me siento: " + record.mood;
+          item.appendChild(mood);
+        }
+        const body = document.createElement("p");
+        body.style.whiteSpace = "pre-wrap";
+        body.textContent = record.text || "";
+        item.appendChild(body);
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "secondary";
+        del.textContent = "Borrar esta página";
+        del.addEventListener("click", async () => {
+          if (!confirm("¿Quieres borrar esta página del diario? No se puede deshacer.")) return;
+          del.disabled = true;
+          try {
+            await db.ref("users/" + uid + "/diaryEntries/" + record.id).remove();
+            await loadDiaryEntries(uid);
+            diaryStatus.textContent = "La página se ha borrado.";
+          } catch (error) {
+            del.disabled = false;
+            diaryStatus.textContent = "No se ha podido borrar. Código: " + (error.code || "error");
+          }
+        });
+        item.appendChild(del);
+        diaryEntries.appendChild(item);
+      });
+    } catch (error) {
+      diaryEntries.innerHTML = "<p class='muted'>No se ha podido cargar el diario. Puede que las reglas privadas de Firebase aún no permitan esta sección. Código: " + (error.code || "error") + ".</p>";
+    }
+  }
+
   document.getElementById("logoutBtn").addEventListener("click", () => auth.signOut());
+
+  const diaryDateInput = document.getElementById("diaryDate");
+  const localToday = new Date();
+  diaryDateInput.value = localToday.getFullYear() + "-" + String(localToday.getMonth() + 1).padStart(2, "0") + "-" + String(localToday.getDate()).padStart(2, "0");
 
   auth.onAuthStateChanged((user) => {
     authPanel.classList.toggle("hidden", !!user);
@@ -613,6 +736,7 @@
   async function loadEntries(uid) {
     entries.innerHTML = "<p class='muted'>Cargando…</p>";
     sexEntries.innerHTML = "<p class='muted'>Cargando…</p>";
+    loadDiaryEntries(uid);
     try {
       const [cycleSnapshot, sexSnapshot] = await Promise.all([
         db.ref("users/" + uid + "/cycleEntries").once("value"),
