@@ -429,11 +429,11 @@
       const [cycleSnapshot, sexSnapshot, diarySnapshot] = await Promise.all([
         db.ref("users/" + user.uid + "/cycleEntries").once("value"),
         db.ref("users/" + user.uid + "/sexualEntries").once("value"),
-        db.ref("users/" + user.uid + "/diaryEntries").once("value")
+        db.ref("users/" + user.uid + "/diaryEntries").once("value").catch(() => null)
       ]);
       const cycles = Object.entries(cycleSnapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
       const relationships = Object.entries(sexSnapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
-      const diary = Object.entries(diarySnapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
+      const diary = Object.entries((diarySnapshot && diarySnapshot.val()) || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
       const backup = {
         app: "Mi Ciclo",
         exportedAt: new Date().toISOString(),
