@@ -52,10 +52,26 @@
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .status { margin-top: 15px; font-size: 14px; line-height: 1.5; }
     .hidden { display: none; }
-    .entry { background: #fffdf9; border: 1px solid #ead9dd; border-radius: 16px; padding: 15px 16px; margin: 10px 0; overflow-wrap: anywhere; box-shadow: 0 4px 12px rgba(111,69,83,.035); }
-    .entry strong { display: inline-flex; align-items: center; color: #704b5a; font-size: 15px; font-weight: 650; margin-bottom: 4px; }
-    .entry p { margin: 6px 0 0; color: #806875; font-size: 14px; line-height: 1.55; }
-    .entry button { width: auto; min-width: 150px; margin-top: 12px; padding: 9px 13px; font-size: 13px; }
+    .entry { display: grid; grid-template-columns: minmax(94px,auto) 1fr; align-items: start; gap: 4px 14px; background: #fffdf9; border: 1px solid #ead9dd; border-radius: 14px; padding: 14px 16px; margin: 9px 0; overflow-wrap: anywhere; box-shadow: 0 3px 10px rgba(111,69,83,.025); }
+    .entry strong { display: inline-flex; align-items: center; color: #704b5a; font-size: 14px; font-weight: 650; margin: 0; }
+    .entry p { margin: 0; color: #806875; font-size: 13px; line-height: 1.55; }
+    .entry button { grid-column: 1 / -1; width: auto; justify-self: start; min-width: 140px; margin-top: 8px; padding: 8px 12px; font-size: 13px; }
+    .calendar-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin: 12px 0 18px; }
+    .calendar-head h3 { margin:0; text-align:center; font-family:Georgia,serif; color:#704b5a; font-size:20px; font-weight:500; }
+    .calendar-head button { width:42px; height:40px; margin:0; padding:0; border:1px solid #ead4da; background:#fffdf9; color:#87586a; box-shadow:none; font-size:20px; }
+    .calendar-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:5px; }
+    .calendar-weekday { text-align:center; padding:7px 0; color:#967985; font-size:11px; font-weight:700; }
+    .calendar-day { min-height:42px; display:flex; align-items:center; justify-content:center; border-radius:12px; border:1px solid transparent; font-size:13px; color:#59414a; background:#fffdf9; }
+    .calendar-day.empty { background:transparent; }
+    .calendar-day.today { border-color:#b97c91; font-weight:700; }
+    .calendar-day.actual { background:#c98fa2; color:white; font-weight:700; }
+    .calendar-day.predicted { background:#fff0f4; border:1px dashed #b97c91; color:#87586a; font-weight:700; }
+    .calendar-day.fertile { background:#f7e9ef; color:#87586a; }
+    .calendar-legend { display:flex; flex-wrap:wrap; gap:8px 14px; margin-top:16px; color:#806875; font-size:12px; }
+    .legend-item { display:inline-flex; align-items:center; gap:6px; }
+    .legend-dot { width:10px; height:10px; border-radius:4px; display:inline-block; background:#c98fa2; }
+    .legend-dot.predicted { background:#fff0f4; border:1px dashed #b97c91; }
+    .legend-dot.fertile { background:#f7e9ef; }
     .stats { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }
     .stat { min-width: 0; background: #fffdf8; border: 1px solid #ead9dd; border-radius: 17px; padding: 15px; }
     .stat strong { display: block; font-family: Georgia, "Times New Roman", serif; font-size: 23px; font-weight: 500; margin: 5px 0; color: #87586a; overflow-wrap: anywhere; }
@@ -73,6 +89,8 @@
       .tabs { gap: 7px; }
       .tabs button { padding: 9px 12px; font-size: 14px; }
       .panel { padding: 20px; border-radius: 19px; }
+      .entry { grid-template-columns: 1fr; gap: 5px; }
+      .calendar-day { min-height: 36px; border-radius: 9px; }
     }
     @media (max-width: 360px) { .panel { padding: 16px; } #authForm { grid-template-columns: minmax(0,1fr); } #authForm button { grid-column: 1 / -1; } .stats { grid-template-columns: 1fr; } }
     @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; } }
@@ -104,14 +122,31 @@
 
   <nav id="appTabs" class="tabs hidden" aria-label="Secciones de Mi Ciclo" role="tablist">
     <button type="button" role="tab" data-tab="resumen" aria-selected="true">Resumen</button>
+    <button type="button" role="tab" data-tab="calendario" aria-selected="false">Calendario</button>
     <button type="button" role="tab" data-tab="ciclo" aria-selected="false">Mi ciclo</button>
     <button type="button" role="tab" data-tab="relaciones" aria-selected="false">Relaciones</button>
     <button type="button" role="tab" data-tab="historial" aria-selected="false">Historial</button>
   </nav>
 
   <section id="appPanel" class="hidden">
+    <div class="panel hidden" data-tab-panel="calendario">
+      <h2>Tu calendario</h2>
+      <p class="hint">Consulta tus fechas registradas y las estimaciones orientativas de tu ciclo.</p>
+      <div class="calendar-head">
+        <button type="button" class="secondary" id="prevMonth" aria-label="Mes anterior">‹</button>
+        <h3 id="calendarTitle">Mes y año</h3>
+        <button type="button" class="secondary" id="nextMonth" aria-label="Mes siguiente">›</button>
+      </div>
+      <div class="calendar-grid" id="calendarGrid" aria-label="Calendario mensual"></div>
+      <div class="calendar-legend">
+        <span class="legend-item"><i class="legend-dot"></i> Menstruación registrada</span>
+        <span class="legend-item"><i class="legend-dot predicted"></i> Próxima fecha estimada</span>
+        <span class="legend-item"><i class="legend-dot fertile"></i> Ventana fértil estimada</span>
+      </div>
+      <p class="hint">Las fechas estimadas son orientativas y no sirven para evitar un embarazo.</p>
+    </div>
     <div class="panel hidden" data-tab-panel="ciclo">
-      <h2>Tu registro</h2>
+      <h2>Registrar menstruación</h2>
       <p class="muted">Anota el primer día de tu menstruación y, si quieres, cómo te encuentras.</p>
       <form id="cycleForm">
         <label for="periodDate">Primer día de la menstruación</label>
@@ -226,6 +261,10 @@
   const sexStatus = document.getElementById("sexStatus");
   const authForm = document.getElementById("authForm");
   const appTabs = document.getElementById("appTabs");
+  let calendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  let calendarRecords = [];
+  document.getElementById("prevMonth").addEventListener("click", () => { calendarMonth.setMonth(calendarMonth.getMonth() - 1); renderCalendar(); });
+  document.getElementById("nextMonth").addEventListener("click", () => { calendarMonth.setMonth(calendarMonth.getMonth() + 1); renderCalendar(); });
 
   function selectTab(name) {
     appTabs.querySelectorAll("[data-tab]").forEach(button => {
@@ -327,7 +366,52 @@
     return parts.length === 3 ? parts[2] + "/" + parts[1] + "/" + parts[0] : dateString;
   }
 
+  function renderCalendar() {
+    const grid = document.getElementById("calendarGrid");
+    const title = document.getElementById("calendarTitle");
+    if (!grid || !title) return;
+    const year = calendarMonth.getFullYear(), month = calendarMonth.getMonth();
+    title.textContent = calendarMonth.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+    title.textContent = title.textContent.charAt(0).toLocaleUpperCase("es-ES") + title.textContent.slice(1);
+    grid.textContent = "";
+    ["L","M","X","J","V","S","D"].forEach(day => {
+      const label = document.createElement("div"); label.className = "calendar-weekday"; label.textContent = day; grid.appendChild(label);
+    });
+    const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    for (let i = 0; i < firstWeekday; i++) { const empty = document.createElement("div"); empty.className = "calendar-day empty"; grid.appendChild(empty); }
+    const actualDates = new Set(calendarRecords.map(r => r.periodDate).filter(Boolean));
+    const sorted = [...actualDates].sort();
+    const lengths = [];
+    for (let i = 1; i < sorted.length; i++) {
+      const days = Math.round((new Date(sorted[i] + "T12:00:00") - new Date(sorted[i - 1] + "T12:00:00")) / 86400000);
+      if (days >= 15 && days <= 60) lengths.push(days);
+    }
+    const avg = lengths.length ? Math.round(lengths.reduce((sum, days) => sum + days, 0) / lengths.length) : null;
+    let predicted = null, fertileStart = null, fertileEnd = null;
+    if (avg && sorted.length) {
+      predicted = new Date(sorted[sorted.length - 1] + "T12:00:00"); predicted.setDate(predicted.getDate() + avg);
+      const ovulation = new Date(predicted); ovulation.setDate(ovulation.getDate() - 14);
+      fertileStart = new Date(ovulation); fertileStart.setDate(fertileStart.getDate() - 5);
+      fertileEnd = new Date(ovulation); fertileEnd.setDate(fertileEnd.getDate() + 1);
+    }
+    const dateKey = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    const today = dateKey(new Date());
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day, 12);
+      const key = dateKey(date);
+      const cell = document.createElement("div"); cell.className = "calendar-day"; cell.textContent = day;
+      if (key === today) cell.classList.add("today");
+      if (actualDates.has(key)) { cell.classList.add("actual"); cell.title = "Menstruación registrada"; }
+      else if (predicted && key === dateKey(predicted)) { cell.classList.add("predicted"); cell.title = "Próxima menstruación estimada"; }
+      else if (fertileStart && date >= new Date(fertileStart.getFullYear(), fertileStart.getMonth(), fertileStart.getDate(), 12) && date <= new Date(fertileEnd.getFullYear(), fertileEnd.getMonth(), fertileEnd.getDate(), 12)) { cell.classList.add("fertile"); cell.title = "Ventana fértil estimada"; }
+      grid.appendChild(cell);
+    }
+  }
+
   function renderCycleSummary(records) {
+    calendarRecords = records.slice();
+    renderCalendar();
     const dates = [...new Set(records.map(r => r.periodDate).filter(Boolean))].sort();
     const lengths = [];
     for (let i = 1; i < dates.length; i++) {
@@ -459,7 +543,7 @@
           const item = document.createElement("div");
           item.className = "entry";
           const date = document.createElement("strong");
-          date.textContent = "🌸  " + formatDate(record.periodDate);
+          date.textContent = formatDate(record.periodDate);
           item.appendChild(date);
           if (record.symptoms) {
             const note = document.createElement("p");
