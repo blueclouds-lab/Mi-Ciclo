@@ -72,12 +72,28 @@
     .mini-calendar .hint { font-size:11px; line-height:1.4; }
     .calendar-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:5px; }
     .calendar-weekday { text-align:center; padding:7px 0; color:#967985; font-size:11px; font-weight:700; }
-    .calendar-day { min-height:42px; display:flex; align-items:center; justify-content:center; border-radius:12px; border:1px solid transparent; font-size:13px; color:#59414a; background:#fffdf9; }
+    .calendar-day { min-height:42px; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; border-radius:12px; border:1px solid transparent; padding:2px 0; font:inherit; font-size:13px; color:#59414a; background:#fffdf9; cursor:pointer; }
+    .calendar-day:focus-visible { outline:2px solid #b97c91; outline-offset:2px; }
+    .calendar-day.selected { box-shadow:inset 0 0 0 2px #87586a; }
+    .day-number { line-height:1.15; }
+    .day-markers { display:flex; align-items:center; justify-content:center; gap:2px; min-height:5px; }
+    .day-marker { display:inline-block; width:4px; height:4px; border-radius:50%; background:#b97c91; }
+    .day-marker.diary { background:#9c8ab8; }
+    .day-marker.relation { background:#d4a45f; }
+    .calendar-day.actual .day-marker { background:#fffaf2; }
+    .calendar-day.actual .day-marker.diary { background:#e7d5ff; }
+    .calendar-day.actual .day-marker.relation { background:#ffe3a8; }
     .calendar-day.empty { background:transparent; }
     .calendar-day.today { border-color:#b97c91; font-weight:700; }
     .calendar-day.actual { background:#c98fa2; color:white; font-weight:700; }
     .calendar-day.predicted { background:#fff0f4; border:1px dashed #b97c91; color:#87586a; font-weight:700; }
     .calendar-day.fertile { background:#f7e9ef; color:#87586a; }
+    .day-details { margin-top:16px; padding:14px; border:1px solid #ead4da; border-radius:16px; background:#fffaf2; }
+    .day-details h3 { margin:0 0 10px; font-size:16px; }
+    .day-detail-item { padding:10px 0; border-top:1px solid #f0dfe4; }
+    .day-detail-item:first-of-type { border-top:0; padding-top:0; }
+    .day-detail-item strong { display:block; margin-bottom:4px; color:#87586a; font-size:13px; }
+    .day-detail-item p { margin:3px 0; font-size:13px; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; }
     .calendar-legend { display:flex; flex-wrap:wrap; gap:8px 14px; margin-top:16px; color:#806875; font-size:12px; }
     .legend-item { display:inline-flex; align-items:center; gap:6px; }
     .legend-dot { width:10px; height:10px; border-radius:4px; display:inline-block; background:#c98fa2; }
@@ -165,9 +181,16 @@
       <div class="calendar-grid" id="calendarGrid" aria-label="Calendario mensual"></div>
       <div class="calendar-legend">
         <span class="legend-item"><i class="legend-dot"></i> Menstruación registrada</span>
+        <span class="legend-item"><i class="legend-dot" style="background:#b97c91"></i> Síntomas o estado de ánimo</span>
+        <span class="legend-item"><i class="legend-dot" style="background:#9c8ab8"></i> Página del diario</span>
+        <span class="legend-item"><i class="legend-dot" style="background:#d4a45f"></i> Relación registrada</span>
         <span class="legend-item"><i class="legend-dot predicted"></i> Próxima fecha estimada</span>
         <span class="legend-item"><i class="legend-dot fertile"></i> Ventana fértil estimada</span>
       </div>
+      <section id="calendarDayDetails" class="day-details" aria-live="polite">
+        <h3 id="calendarDetailsTitle">Tus anotaciones</h3>
+        <p class="hint">Toca un día del calendario para consultar lo que guardaste en esa fecha.</p>
+      </section>
       <p class="hint">Las fechas estimadas son orientativas y no sirven para evitar un embarazo.</p>
     </div>
     <div class="panel hidden" data-tab-panel="ciclo">
@@ -388,8 +411,21 @@
   let calendarRecords = [];
   let loadedCycleRecords = [];
   let loadedSexRecords = [];
+  let loadedDiaryRecords = [];
+  let selectedCalendarDate = "";
   document.getElementById("prevMonth").addEventListener("click", () => { calendarMonth.setMonth(calendarMonth.getMonth() - 1); renderCalendar(); });
   document.getElementById("nextMonth").addEventListener("click", () => { calendarMonth.setMonth(calendarMonth.getMonth() + 1); renderCalendar(); });
+  document.getElementById("calendarGrid").addEventListener("click", event => {
+    const day = event.target.closest("button[data-date]");
+    if (day) showCalendarDay(day.dataset.date);
+  });
+  document.getElementById("miniCalendarGrid").addEventListener("click", event => {
+    const day = event.target.closest("button[data-date]");
+    if (day) {
+      selectTab("calendario");
+      showCalendarDay(day.dataset.date);
+    }
+  });
 
   function selectTab(name) {
     appTabs.querySelectorAll("[data-tab]").forEach(button => {
@@ -558,6 +594,9 @@
       const snapshot = await db.ref("users/" + uid + "/diaryEntries").once("value");
       const records = Object.entries(snapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
       records.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")) || Number(b.createdAt || 0) - Number(a.createdAt || 0));
+      loadedDiaryRecords = records;
+      renderCalendar();
+      if (selectedCalendarDate) showCalendarDay(selectedCalendarDate);
       diaryEntries.textContent = "";
       if (!records.length) {
         diaryEntries.innerHTML = "<p class='muted'>Todavía no has escrito ninguna página. Cuando quieras, empieza por cómo te sientes hoy.</p>";
@@ -644,6 +683,62 @@
     return parts.length === 3 ? parts[2] + "/" + parts[1] + "/" + parts[0] : dateString;
   }
 
+  function showCalendarDay(dateKey) {
+    selectedCalendarDate = dateKey;
+    const title = document.getElementById("calendarDetailsTitle");
+    const details = document.getElementById("calendarDayDetails");
+    if (!title || !details) return;
+    title.textContent = "Anotaciones del " + formatDate(dateKey);
+    details.querySelectorAll(".day-detail-item, .day-details-empty").forEach(node => node.remove());
+
+    const addSection = (heading, lines) => {
+      if (!lines.length) return;
+      const section = document.createElement("div");
+      section.className = "day-detail-item";
+      const strong = document.createElement("strong");
+      strong.textContent = heading;
+      section.appendChild(strong);
+      lines.forEach(line => {
+        const p = document.createElement("p");
+        p.textContent = line;
+        section.appendChild(p);
+      });
+      details.appendChild(section);
+    };
+
+    const cycles = calendarRecords.filter(record => record.periodDate === dateKey);
+    cycles.forEach(record => {
+      const lines = ["Menstruación registrada"];
+      if (record.mood) lines.push("Estado de ánimo: " + record.mood);
+      if (record.symptoms) lines.push("Síntomas: " + record.symptoms);
+      addSection("Mi ciclo", lines);
+    });
+    const diaries = loadedDiaryRecords.filter(record => record.date === dateKey);
+    diaries.forEach(record => {
+      const lines = [];
+      if (record.mood) lines.push("Estado de ánimo: " + record.mood);
+      if (record.text) lines.push(record.text);
+      addSection("Diario" + (record.title ? " · " + record.title : ""), lines.length ? lines : ["Página guardada"]);
+    });
+    const relations = loadedSexRecords.filter(record => record.date === dateKey);
+    relations.forEach(record => {
+      const lines = [];
+      if (record.protection) lines.push("Protección: " + record.protection);
+      if (record.contraception) lines.push("Anticoncepción: " + record.contraception);
+      if (record.ejaculation) lines.push("Eyaculación: " + record.ejaculation);
+      if (record.incident) lines.push("Incidencia: " + record.incident);
+      if (record.notes) lines.push("Notas: " + record.notes);
+      addSection("Relaciones", lines.length ? lines : ["Registro guardado"]);
+    });
+    if (!cycles.length && !diaries.length && !relations.length) {
+      const empty = document.createElement("p");
+      empty.className = "hint day-details-empty";
+      empty.textContent = "No hay anotaciones guardadas para este día.";
+      details.appendChild(empty);
+    }
+    renderCalendar();
+  }
+
   function renderCalendar() {
     const grid = document.getElementById("calendarGrid");
     const title = document.getElementById("calendarTitle");
@@ -678,11 +773,30 @@
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day, 12);
       const key = dateKey(date);
-      const cell = document.createElement("div"); cell.className = "calendar-day"; cell.textContent = day;
+      const cell = document.createElement("button");
+      cell.type = "button";
+      cell.className = "calendar-day";
+      cell.dataset.date = key;
+      cell.setAttribute("aria-label", formatDate(key));
+      const number = document.createElement("span");
+      number.className = "day-number";
+      number.textContent = day;
+      cell.appendChild(number);
+      const markers = document.createElement("span");
+      markers.className = "day-markers";
+      const cycleRecordsForDay = calendarRecords.filter(record => record.periodDate === key);
+      const hasSymptoms = cycleRecordsForDay.some(record => record.symptoms || record.mood);
+      const hasDiary = loadedDiaryRecords.some(record => record.date === key);
+      const hasRelation = loadedSexRecords.some(record => record.date === key);
       if (key === today) cell.classList.add("today");
       if (actualDates.has(key)) { cell.classList.add("actual"); cell.title = "Menstruación registrada"; }
       else if (predicted && key === dateKey(predicted)) { cell.classList.add("predicted"); cell.title = "Próxima menstruación estimada"; }
       else if (fertileStart && date >= new Date(fertileStart.getFullYear(), fertileStart.getMonth(), fertileStart.getDate(), 12) && date <= new Date(fertileEnd.getFullYear(), fertileEnd.getMonth(), fertileEnd.getDate(), 12)) { cell.classList.add("fertile"); cell.title = "Ventana fértil estimada"; }
+      if (hasSymptoms) { const dot = document.createElement("i"); dot.className = "day-marker"; dot.title = "Síntomas o estado de ánimo"; markers.appendChild(dot); }
+      if (hasDiary) { const dot = document.createElement("i"); dot.className = "day-marker diary"; dot.title = "Página del diario"; markers.appendChild(dot); }
+      if (hasRelation) { const dot = document.createElement("i"); dot.className = "day-marker relation"; dot.title = "Relación registrada"; markers.appendChild(dot); }
+      cell.appendChild(markers);
+      if (key === selectedCalendarDate) cell.classList.add("selected");
       grid.appendChild(cell);
     }
     const miniGrid = document.getElementById("miniCalendarGrid");
