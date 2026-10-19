@@ -27,8 +27,12 @@
     .subtitle { margin: 5px auto 0; max-width: 330px; font-size: 15px; }
     .panel { min-width: 0; background: rgba(255,250,242,.96); border: 1px solid var(--border); border-radius: 23px; padding: 24px; margin: 0; box-shadow: 0 12px 32px rgba(111,69,83,.075); }
     #authPanel { max-width: 560px; margin: 0 auto; }
-    #appPanel:not(.hidden) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
-    #appPanel > .panel:first-child, #appPanel > .panel:nth-child(4), #appPanel > .panel:last-child { grid-column: 1 / -1; }
+    #appPanel:not(.hidden) { display: block; }
+    .tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0 auto 18px; }
+    .tabs button { width: auto; margin: 0; padding: 10px 16px; border-radius: 999px; background: #fffaf2; color: #87586a; border-color: #dfc2cc; box-shadow: none; }
+    .tabs button[aria-selected="true"] { background: #c98fa2; color: #fffaf7; border-color: #c98fa2; }
+    #appPanel > .panel { margin-bottom: 16px; }
+    #appPanel > .panel.hidden { display: none; }
     h2 { font-family: Georgia, "Times New Roman", serif; font-size: 22px; font-weight: 500; color: #704b5a; margin: 0 0 10px; }
     label { display: block; margin: 14px 0 7px; font-size: 13px; font-weight: 600; color: #765965; }
     input, textarea, button { width: 100%; min-width: 0; font: inherit; border-radius: 13px; padding: 12px 13px; }
@@ -63,8 +67,9 @@
     @media (max-width: 680px) {
       body { padding: 18px 12px; }
       main { max-width: 540px; }
-      #appPanel:not(.hidden) { grid-template-columns: minmax(0,1fr); gap: 14px; }
-      #appPanel > .panel:first-child, #appPanel > .panel:nth-child(4), #appPanel > .panel:last-child { grid-column: auto; }
+      #appPanel > .panel { margin-bottom: 14px; }
+      .tabs { gap: 7px; }
+      .tabs button { padding: 9px 12px; font-size: 14px; }
       .panel { padding: 20px; border-radius: 19px; }
     }
     @media (max-width: 360px) { .panel { padding: 16px; } #authForm { grid-template-columns: minmax(0,1fr); } #authForm button { grid-column: 1 / -1; } .stats { grid-template-columns: 1fr; } }
@@ -95,8 +100,15 @@
     <p id="authStatus" class="status" role="status"></p>
   </section>
 
+  <nav id="appTabs" class="tabs hidden" aria-label="Secciones de Mi Ciclo" role="tablist">
+    <button type="button" role="tab" data-tab="resumen" aria-selected="true">Resumen</button>
+    <button type="button" role="tab" data-tab="ciclo" aria-selected="false">Mi ciclo</button>
+    <button type="button" role="tab" data-tab="relaciones" aria-selected="false">Relaciones</button>
+    <button type="button" role="tab" data-tab="historial" aria-selected="false">Historial</button>
+  </nav>
+
   <section id="appPanel" class="hidden">
-    <div class="panel">
+    <div class="panel hidden" data-tab-panel="ciclo">
       <h2>Tu registro</h2>
       <p class="muted">Anota el primer día de tu menstruación y, si quieres, cómo te encuentras.</p>
       <form id="cycleForm">
@@ -109,7 +121,7 @@
       </form>
       <p id="saveStatus" class="status" role="status"></p>
     </div>
-    <div class="panel">
+    <div class="panel" data-tab-panel="resumen">
       <h2>Resumen de tu ciclo</h2>
       <div class="stats">
         <div class="stat"><span>Duración media</span><strong id="avgCycle">—</strong><span>días por ciclo</span></div>
@@ -117,13 +129,13 @@
       </div>
       <p id="fertileEstimate" class="hint">La estimación de ovulación necesita varios ciclos registrados.</p>
     </div>
-    <div class="panel">
+    <div class="panel" data-tab-panel="resumen">
       <h2>Gráfico de tus ciclos</h2>
       <p class="hint">Duración aproximada entre los primeros días de menstruaciones registradas.</p>
       <div id="cycleChart" class="chart" aria-label="Gráfico de duración de los ciclos"></div>
       <p id="chartNote" class="hint">Registra al menos dos menstruaciones para ver el gráfico.</p>
     </div>
-    <div class="panel">
+    <div class="panel hidden" data-tab-panel="relaciones">
       <h2>Registrar relación sexual</h2>
       <p class="muted">Este apartado es opcional y privado en tu cuenta.</p>
       <form id="sexForm">
@@ -160,15 +172,15 @@
       <p id="sexStatus" class="status" role="status"></p>
       <p class="hint">Si hubo una posible incidencia anticonceptiva y te preocupa un embarazo, las predicciones no pueden descartarlo. Consulta cuanto antes con un profesional sanitario o una farmacia para conocer las opciones según el tiempo transcurrido.</p>
     </div>
-    <div class="panel">
+    <div class="panel hidden" data-tab-panel="relaciones">
       <h2>Mis relaciones registradas</h2>
       <div id="sexEntries"><p class="muted">Cargando…</p></div>
     </div>
-    <div class="panel">
+    <div class="panel hidden" data-tab-panel="historial">
       <h2>Mis registros menstruales</h2>
       <div id="entries"><p class="muted">Cargando tus registros…</p></div>
     </div>
-    <div class="panel">
+    <div class="panel hidden" data-tab-panel="historial">
       <p id="accountInfo" class="muted"></p>
       <button id="logoutBtn" class="secondary" type="button">Cerrar sesión</button>
     </div>
@@ -205,6 +217,22 @@
   const sexEntries = document.getElementById("sexEntries");
   const sexStatus = document.getElementById("sexStatus");
   const authForm = document.getElementById("authForm");
+  const appTabs = document.getElementById("appTabs");
+
+  function selectTab(name) {
+    appTabs.querySelectorAll("[data-tab]").forEach(button => {
+      const selected = button.dataset.tab === name;
+      button.setAttribute("aria-selected", String(selected));
+      button.tabIndex = selected ? 0 : -1;
+    });
+    appPanel.querySelectorAll("[data-tab-panel]").forEach(panel => {
+      panel.classList.toggle("hidden", panel.dataset.tabPanel !== name);
+    });
+  }
+  appTabs.querySelectorAll("[data-tab]").forEach(button => {
+    button.addEventListener("click", () => selectTab(button.dataset.tab));
+  });
+  selectTab("resumen");
 
   function showAuthMessage(message) {
     authStatus.textContent = message;
@@ -274,7 +302,9 @@
   auth.onAuthStateChanged((user) => {
     authPanel.classList.toggle("hidden", !!user);
     appPanel.classList.toggle("hidden", !user);
+    appTabs.classList.toggle("hidden", !user);
     if (user) {
+      selectTab("resumen");
       document.getElementById("accountInfo").textContent =
         "Sesión iniciada con " + user.email;
       loadEntries(user.uid);
