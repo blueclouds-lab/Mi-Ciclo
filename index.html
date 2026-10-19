@@ -230,6 +230,7 @@
         <label for="diaryText">Lo que quiero contarme</label>
         <textarea id="diaryText" maxlength="8000" rows="6" required placeholder="Escribe aquí tus pensamientos, emociones, recuerdos o cualquier cosa que necesites sacar…"></textarea>
         <button id="diarySaveBtn" type="submit">Guardar en mi diario</button>
+        <button id="diaryCancelEditBtn" class="secondary hidden" type="button">Cancelar edición</button>
       </form>
       <p id="diaryStatus" class="status" role="status"></p>
       <h2 style="margin-top:28px">Mis páginas</h2>
@@ -329,6 +330,20 @@
   const sexStatus = document.getElementById("sexStatus");
   const diaryEntries = document.getElementById("diaryEntries");
   const diaryStatus = document.getElementById("diaryStatus");
+  let editingDiaryId = null;
+  let editingDiaryCreatedAt = null;
+  const diarySaveButton = document.getElementById("diarySaveBtn");
+  const diaryCancelEditButton = document.getElementById("diaryCancelEditBtn");
+  function cancelDiaryEdit() {
+    editingDiaryId = null;
+    editingDiaryCreatedAt = null;
+    document.getElementById("diaryForm").reset();
+    diarySaveButton.textContent = "Guardar en mi diario";
+    diaryCancelEditButton.classList.add("hidden");
+    const today = new Date();
+    document.getElementById("diaryDate").value = today.getFullYear() + "-" + String(today.getMonth() + 1).padStart(2, "0") + "-" + String(today.getDate()).padStart(2, "0");
+  }
+  diaryCancelEditButton.addEventListener("click", cancelDiaryEdit);
   const authForm = document.getElementById("authForm");
   const appTabs = document.getElementById("appTabs");
   let calendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
@@ -478,11 +493,18 @@
     button.disabled = true;
     diaryStatus.textContent = "Guardando tu página…";
     try {
-      await db.ref("users/" + user.uid + "/diaryEntries").push(record);
-      diaryStatus.textContent = "Tu página se ha guardado en tu diario. 💗";
-      document.getElementById("diaryTitle").value = "";
-      document.getElementById("diaryMood").value = "";
-      document.getElementById("diaryText").value = "";
+      if (editingDiaryId) {
+        record.createdAt = editingDiaryCreatedAt;
+        await db.ref("users/" + user.uid + "/diaryEntries/" + editingDiaryId).set(record);
+        diaryStatus.textContent = "Tu página se ha actualizado. 💗";
+        cancelDiaryEdit();
+      } else {
+        await db.ref("users/" + user.uid + "/diaryEntries").push(record);
+        diaryStatus.textContent = "Tu página se ha guardado en tu diario. 💗";
+        document.getElementById("diaryTitle").value = "";
+        document.getElementById("diaryMood").value = "";
+        document.getElementById("diaryText").value = "";
+      }
       await loadDiaryEntries(user.uid);
     } catch (error) {
       diaryStatus.textContent = "No se ha podido guardar. Puede que las reglas privadas de Firebase aún no permitan el diario. Código: " + (error.code || "error");
@@ -518,6 +540,22 @@
         body.style.whiteSpace = "pre-wrap";
         body.textContent = record.text || "";
         item.appendChild(body);
+        const edit = document.createElement("button");
+        edit.type = "button";
+        edit.textContent = "Editar esta página";
+        edit.addEventListener("click", () => {
+          editingDiaryId = record.id;
+          editingDiaryCreatedAt = record.createdAt || null;
+          document.getElementById("diaryDate").value = record.date || "";
+          document.getElementById("diaryTitle").value = record.title || "";
+          document.getElementById("diaryMood").value = record.mood || "";
+          document.getElementById("diaryText").value = record.text || "";
+          diarySaveButton.textContent = "Guardar cambios";
+          diaryCancelEditButton.classList.remove("hidden");
+          diaryStatus.textContent = "Estás editando una página guardada. 💗";
+          document.getElementById("diaryForm").scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+        item.appendChild(edit);
         const del = document.createElement("button");
         del.type = "button";
         del.className = "secondary";
