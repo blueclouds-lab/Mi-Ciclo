@@ -75,14 +75,16 @@
     .calendar-day { min-height:42px; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; border-radius:12px; border:1px solid transparent; padding:2px 0; font:inherit; font-size:13px; color:#59414a; background:#fffdf9; cursor:pointer; }
     .calendar-day:focus-visible { outline:2px solid #b97c91; outline-offset:2px; }
     .calendar-day.selected { box-shadow:inset 0 0 0 2px #87586a; }
+    .day-content { display:flex; align-items:center; justify-content:center; gap:2px; width:100%; line-height:1.15; white-space:nowrap; }
     .day-number { line-height:1.15; }
-    .day-markers { display:flex; align-items:center; justify-content:center; gap:2px; min-height:5px; }
-    .day-marker { display:inline-block; width:4px; height:4px; border-radius:50%; background:#b97c91; }
-    .day-marker.diary { background:#9c8ab8; }
-    .day-marker.relation { background:#d4a45f; }
-    .calendar-day.actual .day-marker { background:#fffaf2; }
-    .calendar-day.actual .day-marker.diary { background:#e7d5ff; }
-    .calendar-day.actual .day-marker.relation { background:#ffe3a8; }
+    .day-markers { display:inline-flex; align-items:center; justify-content:center; gap:1px; min-height:0; }
+    .day-marker { display:inline-flex; align-items:center; justify-content:center; font-style:normal; font-size:9px; line-height:1; }
+    .day-marker.symptoms { color:#a45f78; }
+    .day-marker.diary { color:#8d79ad; }
+    .day-marker.relation { color:#b98735; }
+    .calendar-day.actual .day-marker { filter:brightness(1.25); }
+    .mini-calendar-grid .day-content { gap:1px; }
+    .mini-calendar-grid .day-marker { font-size:7px; }
     .calendar-day.empty { background:transparent; }
     .calendar-day.today { border-color:#b97c91; font-weight:700; }
     .calendar-day.actual { background:#c98fa2; color:white; font-weight:700; }
@@ -778,13 +780,16 @@
       cell.className = "calendar-day";
       cell.dataset.date = key;
       cell.setAttribute("aria-label", formatDate(key));
+      const dayContent = document.createElement("span");
+      dayContent.className = "day-content";
       const number = document.createElement("span");
       number.className = "day-number";
       number.textContent = day;
-      cell.appendChild(number);
+      dayContent.appendChild(number);
       const markers = document.createElement("span");
       markers.className = "day-markers";
       const cycleRecordsForDay = calendarRecords.filter(record => record.periodDate === key);
+      const hasPeriod = actualDates.has(key);
       const hasSymptoms = cycleRecordsForDay.some(record => record.symptoms || record.mood);
       const hasDiary = loadedDiaryRecords.some(record => record.date === key);
       const hasRelation = loadedSexRecords.some(record => record.date === key);
@@ -792,10 +797,12 @@
       if (actualDates.has(key)) { cell.classList.add("actual"); cell.title = "Menstruación registrada"; }
       else if (predicted && key === dateKey(predicted)) { cell.classList.add("predicted"); cell.title = "Próxima menstruación estimada"; }
       else if (fertileStart && date >= new Date(fertileStart.getFullYear(), fertileStart.getMonth(), fertileStart.getDate(), 12) && date <= new Date(fertileEnd.getFullYear(), fertileEnd.getMonth(), fertileEnd.getDate(), 12)) { cell.classList.add("fertile"); cell.title = "Ventana fértil estimada"; }
-      if (hasSymptoms) { const dot = document.createElement("i"); dot.className = "day-marker"; dot.title = "Síntomas o estado de ánimo"; markers.appendChild(dot); }
-      if (hasDiary) { const dot = document.createElement("i"); dot.className = "day-marker diary"; dot.title = "Página del diario"; markers.appendChild(dot); }
-      if (hasRelation) { const dot = document.createElement("i"); dot.className = "day-marker relation"; dot.title = "Relación registrada"; markers.appendChild(dot); }
-      cell.appendChild(markers);
+      if (hasPeriod) { const mark = document.createElement("span"); mark.className = "day-marker period"; mark.textContent = "♥"; mark.title = "Menstruación registrada"; markers.appendChild(mark); }
+      if (hasSymptoms) { const mark = document.createElement("span"); mark.className = "day-marker symptoms"; mark.textContent = "✿"; mark.title = "Síntomas o estado de ánimo"; markers.appendChild(mark); }
+      if (hasDiary) { const mark = document.createElement("span"); mark.className = "day-marker diary"; mark.textContent = "▤"; mark.title = "Página del diario"; markers.appendChild(mark); }
+      if (hasRelation) { const mark = document.createElement("span"); mark.className = "day-marker relation"; mark.textContent = "♡"; mark.title = "Relación registrada"; markers.appendChild(mark); }
+      dayContent.appendChild(markers);
+      cell.appendChild(dayContent);
       if (key === selectedCalendarDate) cell.classList.add("selected");
       grid.appendChild(cell);
     }
