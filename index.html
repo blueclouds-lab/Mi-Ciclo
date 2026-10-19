@@ -87,6 +87,18 @@
     .stat { min-width: 0; background: #fffdf8; border: 1px solid #ead9dd; border-radius: 17px; padding: 15px; }
     .stat strong { display: block; font-family: Georgia, "Times New Roman", serif; font-size: 23px; font-weight: 500; margin: 5px 0; color: #87586a; overflow-wrap: anywhere; }
     .stat span { color: var(--muted); font-size: 12px; }
+    .circle-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
+    .circle-card { min-width: 0; background: #fffdf8; border: 1px solid #ead9dd; border-radius: 17px; padding: 15px; }
+    .circle-card h3 { margin: 0 0 8px; font-size: 15px; font-weight: 600; }
+    .circle-visual { display: flex; justify-content: center; align-items: center; min-height: 140px; }
+    .donut-svg { width: 142px; height: 142px; max-width: 100%; overflow: visible; }
+    .donut-center { font-size: 17px; font-weight: 600; fill: #87586a; text-anchor: middle; dominant-baseline: middle; }
+    .donut-subtitle { font-size: 9px; fill: #967985; text-anchor: middle; }
+    .circle-legend { display: grid; gap: 7px; margin-top: 10px; }
+    .circle-legend-row { display: grid; grid-template-columns: 9px minmax(0, 1fr) auto; align-items: center; gap: 7px; font-size: 12px; color: var(--text); }
+    .circle-dot { width: 9px; height: 9px; border-radius: 50%; }
+    .circle-legend-row span:last-child { color: var(--muted); white-space: nowrap; }
+    .circle-empty { color: var(--muted); font-size: 12px; text-align: center; max-width: 180px; }
     .chart { width: 100%; height: 180px; padding: 8px 0 0; overflow: hidden; }
     .chart svg { display: block; width: 100%; height: 100%; overflow: visible; }
     .chart-label { font-size: 11px; fill: var(--muted); }
@@ -100,6 +112,7 @@
       .tabs { gap: 7px; }
       .tabs button { padding: 9px 12px; font-size: 14px; }
       .panel { padding: 20px; border-radius: 19px; }
+      .circle-charts { grid-template-columns: 1fr; }
       .entry { grid-template-columns: 1fr; gap: 5px; }
       .calendar-day { min-height: 36px; border-radius: 9px; }
     }
@@ -295,6 +308,18 @@
         <div class="stat"><span>Duración media de ciclo</span><strong id="personalCycleAverage">—</strong><span>entre fechas registradas</span></div>
         <div class="stat"><span>Variación observada</span><strong id="personalCycleRange">—</strong><span>ciclo más corto y más largo</span></div>
         <div class="stat"><span>Ánimo más anotado</span><strong id="personalMood">—</strong><span id="personalMoodCount">Aún sin suficientes notas</span></div>
+      </div>
+      <div class="circle-charts">
+        <div class="circle-card">
+          <h3>Estado de ánimo</h3>
+          <div id="moodDonut" class="circle-visual"></div>
+          <div id="moodLegend" class="circle-legend"></div>
+        </div>
+        <div class="circle-card">
+          <h3>Síntomas mencionados</h3>
+          <div id="symptomDonut" class="circle-visual"></div>
+          <div id="symptomLegend" class="circle-legend"></div>
+        </div>
       </div>
       <h3 style="margin-top:20px">Síntomas mencionados en tus notas</h3>
       <p id="personalSymptoms" class="muted">Cuando anotes síntomas, aquí aparecerán las palabras que más se repiten.</p>
@@ -669,6 +694,63 @@
     }
   }
 
+  function renderDonutChart(visualId, legendId, data, emptyText) {
+    const visual = document.getElementById(visualId);
+    const legend = document.getElementById(legendId);
+    visual.textContent = "";
+    legend.textContent = "";
+    const cleanData = data.filter(item => item.count > 0).sort((a, b) => b.count - a.count);
+    const total = cleanData.reduce((sum, item) => sum + item.count, 0);
+    if (!total) {
+      const message = document.createElement("p");
+      message.className = "circle-empty";
+      message.textContent = emptyText;
+      visual.appendChild(message);
+      return;
+    }
+    const ns = "http://www.w3.org/2000/svg";
+    const colors = ["#c98fa2", "#e4b5c4", "#a87989", "#f0ccd6", "#d8a2b4", "#b98798", "#f5dfe5", "#946678", "#e8c1cc"];
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", "0 0 120 120");
+    svg.setAttribute("class", "donut-svg");
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", "Gráfico circular de " + cleanData.map(item => item.label + ": " + item.count).join(", "));
+    const radius = 42, circumference = 2 * Math.PI * radius;
+    const bg = document.createElementNS(ns, "circle");
+    bg.setAttribute("cx", "60"); bg.setAttribute("cy", "60"); bg.setAttribute("r", String(radius));
+    bg.setAttribute("fill", "none"); bg.setAttribute("stroke", "#f7e9ed"); bg.setAttribute("stroke-width", "13");
+    svg.appendChild(bg);
+    let offset = 0;
+    cleanData.forEach((item, index) => {
+      const segment = document.createElementNS(ns, "circle");
+      const segmentLength = circumference * item.count / total;
+      segment.setAttribute("cx", "60"); segment.setAttribute("cy", "60"); segment.setAttribute("r", String(radius));
+      segment.setAttribute("fill", "none"); segment.setAttribute("stroke", colors[index % colors.length]);
+      segment.setAttribute("stroke-width", "13");
+      segment.setAttribute("stroke-dasharray", segmentLength + " " + (circumference - segmentLength));
+      segment.setAttribute("stroke-dashoffset", String(-offset));
+      segment.setAttribute("transform", "rotate(-90 60 60)");
+      svg.appendChild(segment);
+      offset += segmentLength;
+    });
+    const center = document.createElementNS(ns, "text");
+    center.setAttribute("x", "60"); center.setAttribute("y", "56"); center.setAttribute("class", "donut-center");
+    center.textContent = String(total); svg.appendChild(center);
+    const sub = document.createElementNS(ns, "text");
+    sub.setAttribute("x", "60"); sub.setAttribute("y", "72"); sub.setAttribute("class", "donut-subtitle");
+    sub.textContent = "anotaciones"; svg.appendChild(sub);
+    visual.appendChild(svg);
+    cleanData.forEach((item, index) => {
+      const row = document.createElement("div"); row.className = "circle-legend-row";
+      const dot = document.createElement("span"); dot.className = "circle-dot";
+      dot.style.backgroundColor = colors[index % colors.length]; dot.setAttribute("aria-hidden", "true");
+      const label = document.createElement("span"); label.textContent = item.label;
+      const value = document.createElement("span");
+      value.textContent = item.count + " · " + Math.round(item.count / total * 100) + "%";
+      row.append(dot, label, value); legend.appendChild(row);
+    });
+  }
+
   function renderPersonalStats(records) {
     const dates = [...new Set(records.map(r => r.periodDate).filter(Boolean))].sort();
     const lengths = [];
@@ -691,6 +773,9 @@
     document.getElementById("personalMood").textContent = topMood ? topMood[0] : "—";
     document.getElementById("personalMoodCount").textContent = topMood
       ? topMood[1] + (topMood[1] === 1 ? " anotación" : " anotaciones") : "Todavía no has anotado tu ánimo";
+    renderDonutChart("moodDonut", "moodLegend",
+      Object.entries(moodCounts).map(([label, count]) => ({ label, count })),
+      "Cuando registres cómo te sientes, aquí verás el reparto de tus anotaciones.");
 
     const text = records.map(record => String(record.symptoms || "").toLocaleLowerCase("es")).join(" ");
     const categories = [
@@ -707,7 +792,9 @@
     const mentions = categories.map(([label, pattern]) => {
       const matches = text.match(pattern);
       return { label, count: matches ? matches.length : 0 };
-    }).filter(item => item.count > 0).sort((a, b) => b.count - a.count).slice(0, 3);
+    }).filter(item => item.count > 0).sort((a, b) => b.count - a.count);
+    renderDonutChart("symptomDonut", "symptomLegend", mentions,
+      "Cuando tus notas mencionen síntomas habituales, aquí verás su distribución.");
     const symptomsEl = document.getElementById("personalSymptoms");
     symptomsEl.textContent = "";
     if (!mentions.length) {
@@ -715,7 +802,7 @@
         ? "Aún no se repiten palabras de las categorías habituales. Puedes seguir escribiendo con tus propias palabras."
         : "Todavía no hay notas de síntomas para resumir.";
     } else {
-      symptomsEl.textContent = mentions.map(item => item.label + " (" + item.count + ")").join(" · ");
+      symptomsEl.textContent = mentions.slice(0, 3).map(item => item.label + " (" + item.count + ")").join(" · ");
     }
   }
 
