@@ -352,8 +352,8 @@
     svg.setAttribute("viewBox", "0 0 320 170");
     svg.setAttribute("role", "img");
     svg.setAttribute("aria-label", "Gráfico lineal de duración de los ciclos en días");
-    const minDays = Math.min(...recent.map(x => x.days), 21) - 2;
-    const maxDays = Math.max(...recent.map(x => x.days), 35) + 2;
+    const minDays = Math.min(...recent.map(x => x.days), avg || 28, 21) - 2;
+    const maxDays = Math.max(...recent.map(x => x.days), avg || 28, 35) + 2;
     const left = 28, right = 306, top = 20, bottom = 124;
     const xAt = i => recent.length === 1 ? (left + right) / 2 : left + i * (right - left) / (recent.length - 1);
     const yAt = value => bottom - (value - minDays) / Math.max(1, maxDays - minDays) * (bottom - top);
@@ -370,6 +370,21 @@
       label.textContent = value;
       svg.appendChild(label);
     });
+    if (avg) {
+      const meanY = yAt(avg);
+      const meanLine = document.createElementNS(ns, "line");
+      meanLine.setAttribute("x1", left); meanLine.setAttribute("x2", right);
+      meanLine.setAttribute("y1", meanY); meanLine.setAttribute("y2", meanY);
+      meanLine.setAttribute("stroke", "#7fcdb6"); meanLine.setAttribute("stroke-width", "1.5");
+      meanLine.setAttribute("stroke-dasharray", "5 4");
+      svg.appendChild(meanLine);
+      const meanLabel = document.createElementNS(ns, "text");
+      meanLabel.setAttribute("x", right - 2); meanLabel.setAttribute("y", meanY - 5);
+      meanLabel.setAttribute("text-anchor", "end"); meanLabel.setAttribute("font-size", "9");
+      meanLabel.setAttribute("fill", "#b1d0c8");
+      meanLabel.textContent = "Media: " + avg + " d";
+      svg.appendChild(meanLabel);
+    }
     const area = document.createElementNS(ns, "path");
     const points = recent.map((item, i) => [xAt(i), yAt(item.days)]);
     const linePath = points.map((p, i) => (i ? "L" : "M") + p[0] + " " + p[1]).join(" ");
