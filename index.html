@@ -233,6 +233,81 @@
       .stat, .circle-card { padding: 12px; }
     }
 
+
+    /* Detalles botánicos suaves: mejoras visuales sin cambiar datos ni funciones */
+    header { position: relative; }
+    header::after {
+      content: "❀  ·  ♡  ·  ✿";
+      display: block;
+      width: fit-content;
+      margin: 13px auto 0;
+      padding: 5px 16px;
+      color: #c98fa2;
+      border-top: 1px solid #efdde2;
+      border-bottom: 1px solid #efdde2;
+      font-family: Georgia, serif;
+      font-size: 14px;
+      letter-spacing: 3px;
+      opacity: .88;
+    }
+    .panel {
+      position: relative;
+      background-image: radial-gradient(circle at 100% 0%, rgba(247,226,233,.28), transparent 145px);
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+    .panel h2 {
+      position: relative;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(239,222,226,.85);
+    }
+    .panel h2::after {
+      content: "✿";
+      position: absolute;
+      right: 0;
+      bottom: 5px;
+      color: #d7a5b5;
+      font-size: 13px;
+      opacity: .85;
+    }
+    .tabs button {
+      border-radius: 17px 17px 13px 13px;
+      position: relative;
+    }
+    .tabs button[aria-selected="true"] {
+      box-shadow: 0 4px 12px rgba(201,143,162,.18);
+    }
+    .entry, .favorite-memory, .monthly-summary, .favorite-album, .mini-calendar, .stat, .circle-card {
+      transition: border-color .18s ease, transform .18s ease;
+    }
+    .entry:hover, .favorite-memory:hover {
+      border-color: #dfbdc8;
+    }
+    .daily-phrase {
+      position: relative;
+      overflow: hidden;
+    }
+    .daily-phrase::before {
+      content: "❀";
+      position: absolute;
+      left: 12px;
+      bottom: 2px;
+      color: #d9a8b7;
+      opacity: .38;
+      font-size: 22px;
+      pointer-events: none;
+    }
+    .calendar-day.selected {
+      outline: 1px solid rgba(201,143,162,.45);
+      outline-offset: 1px;
+    }
+    input, textarea, select {
+      background-image: linear-gradient(135deg, rgba(255,255,255,.45), transparent 55%);
+    }
+    @media (max-width: 600px) {
+      header::after { margin-top: 10px; font-size: 12px; letter-spacing: 2px; }
+      .panel h2 { padding-bottom: 7px; }
+      .daily-phrase::before { font-size: 18px; }
+    }
   </style>
 </head>
 <body>
