@@ -106,6 +106,14 @@
     .calendar-day.actual .day-marker { filter:brightness(1.25); }
     .mini-calendar-grid .day-content { gap:1px; }
     .mini-calendar-grid .day-marker { font-size:7px; }
+    .self-care-card { border:1px solid #efdee2; border-radius:15px; background:#fffdf9; padding:13px 15px; margin:10px 0; }
+    .self-care-card h3 { margin:0 0 5px; font-size:16px; color:#87586a; }
+    .self-care-meta { color:#967985; font-size:12px; margin-bottom:7px; }
+    .self-care-needs { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+    .self-care-needs span { display:inline-block; border:1px solid #efdee2; border-radius:999px; background:#fbf0f3; color:#87586a; padding:3px 9px; font-size:12px; }
+    .self-care-checks { display:grid; grid-template-columns:repeat(auto-fit,minmax(145px,1fr)); gap:8px; margin:8px 0 14px; }
+    .self-care-checks label { display:flex; align-items:center; gap:8px; margin:0; padding:9px 10px; border:1px solid #efdee2; border-radius:12px; background:#fffdf9; font-weight:400; }
+    .self-care-checks input { width:auto; margin:0; accent-color:#c98fa2; }
     .calendar-day.empty { background:transparent; }
     /* Detalles florales suaves: pétalos discretos y acentos rosa empolvado */
     .calendar-day { position:relative; overflow:visible; border-radius:10px 10px 13px 13px; }
@@ -250,6 +258,7 @@
     <button type="button" role="tab" data-tab="calendario" aria-selected="false">Calendario</button>
     <button type="button" role="tab" data-tab="ciclo" aria-selected="false">Mi ciclo</button>
     <button type="button" role="tab" data-tab="diario" aria-selected="false">Diario</button>
+    <button type="button" role="tab" data-tab="autocuidado" aria-selected="false">✿ Autocuidado</button>
     <button type="button" role="tab" data-tab="relaciones" aria-selected="false">Relaciones</button>
     <button type="button" role="tab" data-tab="historial" aria-selected="false">Historial</button>
   </nav>
@@ -376,6 +385,56 @@
       <label for="favoritesOnly">Mostrar solo recuerdos favoritos</label>
       <input id="favoritesOnly" type="checkbox" style="width:auto; accent-color:#c98fa2">
       <div id="diaryEntries"><p class="muted">Cargando tu diario…</p></div>
+    </div>
+    <div class="panel hidden" data-tab-panel="autocuidado">
+      <h2>✿ Mi espacio de autocuidado</h2>
+      <p class="muted">Un rincón amable para escucharte. No hace falta hacerlo todo: elige lo que necesitas hoy, a tu ritmo.</p>
+      <form id="selfCareForm">
+        <label for="selfCareDate">Fecha</label>
+        <input id="selfCareDate" type="date" required>
+        <label for="selfCareFeeling">¿Cómo me siento hoy?</label>
+        <select id="selfCareFeeling">
+          <option value="">Prefiero no indicarlo</option>
+          <option value="En calma">🌿 En calma</option>
+          <option value="Necesito descansar">🌙 Necesito descansar</option>
+          <option value="Sensible">🌸 Sensible</option>
+          <option value="Con energía">☀️ Con energía</option>
+          <option value="Con estrés">🫧 Con estrés</option>
+          <option value="Triste">🌧️ Triste</option>
+          <option value="Agradecida">💗 Agradecida</option>
+          <option value="No lo tengo claro">☁️ No lo tengo claro</option>
+        </select>
+        <label>¿Qué necesito hoy? Puedes elegir varias opciones.</label>
+        <div class="self-care-checks">
+          <label><input type="checkbox" name="selfCareNeed" value="Descanso"> 🌙 Descanso</label>
+          <label><input type="checkbox" name="selfCareNeed" value="Beber agua"> 💧 Beber agua</label>
+          <label><input type="checkbox" name="selfCareNeed" value="Un paseo"> 🌿 Un paseo</label>
+          <label><input type="checkbox" name="selfCareNeed" value="Tiempo para mí"> 🕯️ Tiempo para mí</label>
+          <label><input type="checkbox" name="selfCareNeed" value="Hablar con alguien"> 💗 Hablar con alguien</label>
+          <label><input type="checkbox" name="selfCareNeed" value="Movimiento suave"> 🌷 Movimiento suave</label>
+          <label><input type="checkbox" name="selfCareNeed" value="Comer algo nutritivo"> 🍓 Comer algo nutritivo</label>
+          <label><input type="checkbox" name="selfCareNeed" value="Desconectar"> ☁️ Desconectar</label>
+        </div>
+        <label for="selfCareRitual">Mi pequeño gesto de cuidado (opcional)</label>
+        <select id="selfCareRitual">
+          <option value="">Aún no lo he elegido</option>
+          <option value="Prepararme una bebida caliente">☕ Prepararme una bebida caliente</option>
+          <option value="Leer unas páginas">📖 Leer unas páginas</option>
+          <option value="Escuchar música">🎵 Escuchar música</option>
+          <option value="Darme una ducha tranquila">🛁 Darme una ducha tranquila</option>
+          <option value="Estirar suavemente">🌿 Estirar suavemente</option>
+          <option value="Escribir unas líneas">✍️ Escribir unas líneas</option>
+          <option value="Acostarme un poco antes">🌙 Acostarme un poco antes</option>
+          <option value="Otro gesto personal">♡ Otro gesto personal</option>
+        </select>
+        <label for="selfCareNote">Una nota para mí (opcional)</label>
+        <textarea id="selfCareNote" maxlength="1000" rows="3" placeholder="¿Qué te gustaría recordarte hoy? Puedes escribirte con cariño…"></textarea>
+        <button id="selfCareSaveBtn" type="submit">Guardar mi momento de cuidado</button>
+      </form>
+      <p id="selfCareStatus" class="status" role="status"></p>
+      <h2 style="margin-top:26px">Mis momentos de cuidado</h2>
+      <p class="hint">Tus anotaciones se guardan en tu espacio privado y aparecen aquí por fecha.</p>
+      <div id="selfCareEntries"><p class="muted">Cargando tus momentos de cuidado…</p></div>
     </div>
     <div class="panel hidden" data-tab-panel="relaciones">
       <h2>Registrar relación sexual</h2>
@@ -808,6 +867,86 @@
       card.appendChild(caption);
       grid.appendChild(card);
     });
+  }
+
+  const selfCareForm = document.getElementById("selfCareForm");
+  const selfCareStatus = document.getElementById("selfCareStatus");
+  const selfCareEntries = document.getElementById("selfCareEntries");
+  const selfCareDateInput = document.getElementById("selfCareDate");
+  const selfCareToday = new Date();
+  selfCareDateInput.value = selfCareToday.getFullYear() + "-" + String(selfCareToday.getMonth() + 1).padStart(2, "0") + "-" + String(selfCareToday.getDate()).padStart(2, "0");
+
+  selfCareForm.addEventListener("submit", async event => {
+    event.preventDefault();
+    const user = auth.currentUser;
+    if (!user) { selfCareStatus.textContent = "Inicia sesión para guardar tu espacio de autocuidado."; return; }
+    const button = document.getElementById("selfCareSaveBtn");
+    const needs = Array.from(selfCareForm.querySelectorAll('input[name="selfCareNeed"]:checked')).map(input => input.value);
+    const record = {
+      date: selfCareDateInput.value,
+      feeling: document.getElementById("selfCareFeeling").value,
+      needs: needs.join(", "),
+      ritual: document.getElementById("selfCareRitual").value,
+      note: document.getElementById("selfCareNote").value.trim(),
+      createdAt: firebase.database.ServerValue.TIMESTAMP
+    };
+    if (!record.date) { selfCareStatus.textContent = "Elige la fecha de este momento de cuidado."; return; }
+    button.disabled = true;
+    selfCareStatus.textContent = "Guardando tu momento de cuidado…";
+    try {
+      await db.ref("users/" + user.uid + "/selfCareEntries").push(record);
+      selfCareStatus.textContent = "Tu momento de cuidado se ha guardado. Trátate con cariño. 💗";
+      document.getElementById("selfCareFeeling").value = "";
+      document.getElementById("selfCareRitual").value = "";
+      document.getElementById("selfCareNote").value = "";
+      selfCareForm.querySelectorAll('input[name="selfCareNeed"]').forEach(input => { input.checked = false; });
+      await loadSelfCareEntries(user.uid);
+    } catch (error) {
+      selfCareStatus.textContent = "No se ha podido guardar todavía. Hay que autorizar de forma privada la nueva sección en las reglas de Firebase. Código: " + (error.code || "error");
+    } finally { button.disabled = false; }
+  });
+
+  async function loadSelfCareEntries(uid) {
+    if (!selfCareEntries) return;
+    selfCareEntries.innerHTML = "<p class='muted'>Cargando tus momentos de cuidado…</p>";
+    try {
+      const snapshot = await db.ref("users/" + uid + "/selfCareEntries").once("value");
+      const records = Object.entries(snapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
+      records.sort((a,b) => String(b.date || "").localeCompare(String(a.date || "")) || Number(b.createdAt || 0) - Number(a.createdAt || 0));
+      selfCareEntries.textContent = "";
+      if (!records.length) {
+        selfCareEntries.innerHTML = "<p class='muted'>Todavía no has guardado ningún momento. Puedes empezar con algo pequeño, sin exigencias. 🌷</p>";
+        return;
+      }
+      records.forEach(record => {
+        const card = document.createElement("article");
+        card.className = "self-care-card";
+        const title = document.createElement("h3");
+        title.textContent = record.feeling ? "✿ " + record.feeling : "✿ Mi momento de cuidado";
+        card.appendChild(title);
+        const date = document.createElement("div");
+        date.className = "self-care-meta";
+        date.textContent = formatDate(record.date);
+        card.appendChild(date);
+        if (record.needs) {
+          const needs = document.createElement("div");
+          needs.className = "self-care-needs";
+          String(record.needs).split(", ").filter(Boolean).forEach(value => {
+            const chip = document.createElement("span"); chip.textContent = value; needs.appendChild(chip);
+          });
+          card.appendChild(needs);
+        }
+        if (record.ritual) {
+          const ritual = document.createElement("p"); ritual.textContent = "Mi gesto de cuidado: " + record.ritual; card.appendChild(ritual);
+        }
+        if (record.note) {
+          const note = document.createElement("p"); note.textContent = record.note; card.appendChild(note);
+        }
+        selfCareEntries.appendChild(card);
+      });
+    } catch (error) {
+      selfCareEntries.innerHTML = "<p class='muted'>No se han podido cargar tus momentos de cuidado. Comprueba las reglas privadas de Firebase. Código: " + (error.code || "error") + "</p>";
+    }
   }
 
   async function loadDiaryEntries(uid) {
@@ -1379,6 +1518,7 @@
     entries.innerHTML = "<p class='muted'>Cargando…</p>";
     sexEntries.innerHTML = "<p class='muted'>Cargando…</p>";
     loadDiaryEntries(uid);
+    loadSelfCareEntries(uid);
     try {
       const [cycleSnapshot, sexSnapshot] = await Promise.all([
         db.ref("users/" + uid + "/cycleEntries").once("value"),
