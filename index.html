@@ -493,6 +493,7 @@
     <button type="button" role="tab" data-tab="ciclo" aria-selected="false">Mi ciclo</button>
     <button type="button" role="tab" data-tab="diario" aria-selected="false">Diario</button>
     <button type="button" role="tab" data-tab="emociones" aria-selected="false">♡ Emociones</button>
+    <button type="button" role="tab" data-tab="recuerdos" aria-selected="false">🎁 Mi cajita de recuerdos</button>
     <button type="button" role="tab" data-tab="autocuidado" aria-selected="false">✿ Autocuidado</button>
     <button type="button" role="tab" data-tab="relaciones" aria-selected="false">Relaciones</button>
     <button type="button" role="tab" data-tab="historial" aria-selected="false">Historial</button>
@@ -607,6 +608,18 @@
       <div id="cycleChart" class="chart" aria-label="Gráfico de duración de los ciclos"></div>
       <p id="chartNote" class="hint">Registra al menos dos menstruaciones para ver el gráfico.</p>
     </div>
+    <div class="panel hidden" data-tab-panel="recuerdos">
+      <p class="daily-phrase-kicker">✿ Un pequeño tesoro de momentos bonitos</p>
+      <h2>🎁 Mi cajita de recuerdos</h2>
+      <p class="hint">Aquí descansan tus páginas favoritas, con sus fotografías, fechas y palabras especiales. Un lugar para volver a lo que te hizo bien. ♡</p>
+      <section class="favorite-album" aria-labelledby="favoriteAlbumTitle">
+        <h3 id="favoriteAlbumTitle">♡ Mi álbum de recuerdos</h3>
+        <p class="hint" style="margin:0">Tus páginas favoritas, con sus fotos y fechas, reunidas en un rincón especial.</p>
+        <div id="favoriteAlbumGrid" class="favorite-album-grid">
+          <p class="muted">Tus recuerdos favoritos aparecerán aquí.</p>
+        </div>
+      </section>
+    </div>
     <div class="panel hidden" data-tab-panel="diario">
       <h2>Mi diario personal</h2>
       <p class="muted">Un espacio solo para ti. Escribe lo que te apetezca recordar, sin necesidad de registrar tu ciclo.</p>
@@ -641,13 +654,7 @@
         <button id="diaryCancelEditBtn" class="secondary hidden" type="button">Cancelar edición</button>
       </form>
       <p id="diaryStatus" class="status" role="status"></p>
-      <section class="favorite-album" aria-labelledby="favoriteAlbumTitle">
-        <h3 id="favoriteAlbumTitle">♡ Mi álbum de recuerdos</h3>
-        <p class="hint" style="margin:0">Tus páginas favoritas, con sus fotos y fechas, reunidas en un rincón especial.</p>
-        <div id="favoriteAlbumGrid" class="favorite-album-grid">
-          <p class="muted">Tus recuerdos favoritos aparecerán aquí.</p>
-        </div>
-      </section>
+
       <h2 style="margin-top:28px">Mis páginas</h2>
       <p class="hint">Tus anotaciones más recientes aparecerán aquí. Puedes editar, borrar, buscar por palabras o filtrar por etiquetas.</p>
       <label for="diarySearch">Buscar en mi diario</label>
