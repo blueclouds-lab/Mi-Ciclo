@@ -123,6 +123,12 @@
     .season-garden { position:relative; overflow:hidden; margin:0 0 16px; padding:17px 18px; border:1px solid #ead2da; border-radius:18px; background:radial-gradient(ellipse at 100% 0%,rgba(232,190,203,.24),transparent 125px),linear-gradient(135deg,#fffaf0,#fff2f5); }
     .season-garden::before { content:""; position:absolute; width:92px; height:92px; right:-22px; bottom:-34px; border:1px solid rgba(201,143,162,.22); border-radius:50%; box-shadow:0 0 0 10px rgba(201,143,162,.05),0 0 0 21px rgba(201,143,162,.035); pointer-events:none; }
     .season-garden-art { margin:0 0 5px; color:#c98fa2; font-size:21px; letter-spacing:5px; }
+    .lunar-corner { position:absolute; top:12px; right:13px; display:flex; align-items:center; gap:5px; padding:5px 8px; border:1px solid rgba(201,143,162,.32); border-radius:999px; background:rgba(255,255,255,.78); color:#87586a; font-size:10px; line-height:1.2; box-shadow:0 2px 8px rgba(135,88,106,.06); }
+    .lunar-corner .lunar-symbol { font-size:18px; line-height:1; }
+    .lunar-corner .lunar-copy { display:flex; flex-direction:column; gap:2px; }
+    .lunar-corner .lunar-name { font-weight:600; }
+    .lunar-corner .lunar-date { color:#987783; font-size:9px; }
+    @media (max-width:600px) { .lunar-corner { top:9px; right:9px; padding:4px 6px; } .season-garden-art { padding-right:115px; } }
     .season-garden h2 { margin:0 0 5px; font-size:19px; }
     .season-garden p { position:relative; margin:0; max-width:620px; color:#896b77; font-size:13px; line-height:1.6; }
     .monthly-botanical { margin:12px 0 16px; padding:15px 12px; text-align:center; border:1px solid #ead2da; border-radius:17px; background:radial-gradient(ellipse at 0% 100%,rgba(232,190,203,.18),transparent 110px),linear-gradient(135deg,#fff4f6,#fffaf2); }
@@ -574,6 +580,7 @@
     </div>
     <div class="panel" data-tab-panel="resumen">
       <section class="season-garden" id="seasonGarden" aria-live="polite">
+        <div class="lunar-corner" id="lunarCorner" aria-label="Fase lunar de hoy"><span class="lunar-symbol" id="lunarSymbol" aria-hidden="true">🌔</span><span class="lunar-copy"><span class="lunar-name" id="lunarName">Luna de hoy</span><span class="lunar-date" id="lunarDate"></span></span></div>
         <div class="season-garden-art" id="seasonGardenArt" aria-hidden="true">✿ ❀ 🦋 ❀ ✿</div>
         <h2 id="seasonGardenTitle">Tu jardín de temporada</h2>
         <p id="seasonGardenMessage">Cada estación tiene su forma de florecer. Tú también puedes ir a tu ritmo.</p>
@@ -2052,6 +2059,32 @@
       button.disabled = false;
     }
   });
+
+  // Fase lunar diaria aproximada calculada astronómicamente; funciona sin servicios externos.
+  (function renderDailyMoon() {
+    const now = new Date();
+    const knownNewMoon = Date.UTC(2000, 0, 6, 18, 14);
+    const synodicMonth = 29.530588853;
+    const age = (((now.getTime() - knownNewMoon) / 86400000) % synodicMonth + synodicMonth) % synodicMonth;
+    const fraction = age / synodicMonth;
+    let moon;
+    if (fraction < 0.035 || fraction >= 0.965) moon = { name:"Luna nueva", icon:"🌑" };
+    else if (fraction < 0.215) moon = { name:"Luna creciente", icon:"🌒" };
+    else if (fraction < 0.285) moon = { name:"Cuarto creciente", icon:"🌓" };
+    else if (fraction < 0.465) moon = { name:"Gibosa creciente", icon:"🌔" };
+    else if (fraction < 0.535) moon = { name:"Luna llena", icon:"🌕" };
+    else if (fraction < 0.715) moon = { name:"Gibosa menguante", icon:"🌖" };
+    else if (fraction < 0.785) moon = { name:"Cuarto menguante", icon:"🌗" };
+    else moon = { name:"Luna menguante", icon:"🌘" };
+    const iconNode = document.getElementById("lunarSymbol");
+    const nameNode = document.getElementById("lunarName");
+    const dateNode = document.getElementById("lunarDate");
+    const corner = document.getElementById("lunarCorner");
+    if (iconNode) iconNode.textContent = moon.icon;
+    if (nameNode) nameNode.textContent = moon.name;
+    if (dateNode) dateNode.textContent = now.toLocaleDateString("es-ES", { day:"numeric", month:"short" });
+    if (corner) corner.setAttribute("aria-label", moon.name + ", fase lunar aproximada del " + now.toLocaleDateString("es-ES", { day:"numeric", month:"long" }));
+  })();
 
   // El jardín cambia de ambientación según la estación local; no guarda datos personales.
   (function renderSeasonGarden() {
