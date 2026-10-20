@@ -55,6 +55,8 @@
     .entry { display: grid; grid-template-columns: minmax(94px,auto) 1fr; align-items: start; gap: 4px 14px; background: #fffdf9; border: 1px solid #ead9dd; border-radius: 14px; padding: 14px 16px; margin: 9px 0; overflow-wrap: anywhere; box-shadow: 0 3px 10px rgba(111,69,83,.025); }
     .entry strong { display: inline-flex; align-items: center; color: #704b5a; font-size: 14px; font-weight: 650; margin: 0; }
     .entry p { margin: 0; color: #806875; font-size: 13px; line-height: 1.55; }
+    .diary-tags { grid-column: 1 / -1; display:flex; flex-wrap:wrap; gap:6px; margin-top:3px; }
+    .diary-tag { display:inline-block; border:1px solid #efd4dc; background:#fff0f4; color:#87586a; border-radius:999px; padding:3px 9px; font-size:12px; }
     .entry button { grid-column: 1 / -1; width: auto; justify-self: start; min-width: 140px; margin-top: 8px; padding: 8px 12px; font-size: 13px; }
     .calendar-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin: 12px 0 18px; }
     .calendar-head h3 { margin:0; text-align:center; font-family:Georgia,serif; color:#704b5a; font-size:20px; font-weight:500; }
@@ -265,6 +267,9 @@
           <option value="Enfadada">🌦️ Enfadada</option>
           <option value="Confundida">☁️ Confundida</option>
         </select>
+        <label for="diaryTags">Etiquetas (opcional, separadas por comas)</label>
+        <input id="diaryTags" type="text" maxlength="240" placeholder="Ej.: autocuidado, trabajo, algo bonito">
+        <p class="hint">Puedes añadir palabras para encontrar después tus páginas más fácilmente.</p>
         <label for="diaryText">Lo que quiero contarme</label>
         <textarea id="diaryText" maxlength="8000" rows="6" required placeholder="Escribe aquí tus pensamientos, emociones, recuerdos o cualquier cosa que necesites sacar…"></textarea>
         <button id="diarySaveBtn" type="submit">Guardar en mi diario</button>
@@ -272,7 +277,10 @@
       </form>
       <p id="diaryStatus" class="status" role="status"></p>
       <h2 style="margin-top:28px">Mis páginas</h2>
-      <p class="hint">Tus anotaciones más recientes aparecerán aquí. Puedes borrar cualquier página cuando quieras.</p>
+      <p class="hint">Tus anotaciones más recientes aparecerán aquí. Puedes editar, borrar, buscar por palabras o filtrar por etiquetas.</p>
+      <label for="diarySearch">Buscar en mi diario</label>
+      <input id="diarySearch" type="search" placeholder="Buscar en títulos, textos, estados de ánimo o etiquetas…">
+      <p id="diarySearchStatus" class="hint" aria-live="polite"></p>
       <div id="diaryEntries"><p class="muted">Cargando tu diario…</p></div>
     </div>
     <div class="panel hidden" data-tab-panel="relaciones">
@@ -559,6 +567,7 @@
       title: document.getElementById("diaryTitle").value.trim(),
       mood: document.getElementById("diaryMood").value,
       text: document.getElementById("diaryText").value.trim(),
+      tags: [...new Set(document.getElementById("diaryTags").value.split(",").map(tag => tag.trim()).filter(Boolean).map(tag => tag.slice(0, 40)))].slice(0, 8),
       createdAt: firebase.database.ServerValue.TIMESTAMP
     };
     if (!record.date || !record.text) {
@@ -579,6 +588,7 @@
         diaryStatus.textContent = "Tu página se ha guardado en tu diario. 💗";
         document.getElementById("diaryTitle").value = "";
         document.getElementById("diaryMood").value = "";
+        document.getElementById("diaryTags").value = "";
         document.getElementById("diaryText").value = "";
       }
       await loadDiaryEntries(user.uid);
@@ -602,11 +612,13 @@
       diaryEntries.textContent = "";
       if (!records.length) {
         diaryEntries.innerHTML = "<p class='muted'>Todavía no has escrito ninguna página. Cuando quieras, empieza por cómo te sientes hoy.</p>";
+        if (diarySearchStatus) diarySearchStatus.textContent = "";
         return;
       }
       records.forEach(record => {
         const item = document.createElement("article");
         item.className = "entry";
+        item.dataset.search = [record.date, record.title, record.mood, record.text, ...(Array.isArray(record.tags) ? record.tags : [])].join(" ").toLocaleLowerCase("es");
         const heading = document.createElement("strong");
         heading.textContent = (record.title ? record.title + " · " : "") + formatDate(record.date);
         item.appendChild(heading);
@@ -619,6 +631,17 @@
         body.style.whiteSpace = "pre-wrap";
         body.textContent = record.text || "";
         item.appendChild(body);
+        if (Array.isArray(record.tags) && record.tags.length) {
+          const tagList = document.createElement("div");
+          tagList.className = "diary-tags";
+          record.tags.forEach(tag => {
+            const chip = document.createElement("span");
+            chip.className = "diary-tag";
+            chip.textContent = "♡ " + tag;
+            tagList.appendChild(chip);
+          });
+          item.appendChild(tagList);
+        }
         const edit = document.createElement("button");
         edit.type = "button";
         edit.textContent = "Editar esta página";
@@ -628,6 +651,7 @@
           document.getElementById("diaryDate").value = record.date || "";
           document.getElementById("diaryTitle").value = record.title || "";
           document.getElementById("diaryMood").value = record.mood || "";
+          document.getElementById("diaryTags").value = Array.isArray(record.tags) ? record.tags.join(", ") : "";
           document.getElementById("diaryText").value = record.text || "";
           diarySaveButton.textContent = "Guardar cambios";
           diaryCancelEditButton.classList.remove("hidden");
@@ -654,10 +678,40 @@
         item.appendChild(del);
         diaryEntries.appendChild(item);
       });
+      filterDiaryEntries();
     } catch (error) {
       diaryEntries.innerHTML = "<p class='muted'>No se ha podido cargar el diario. Puede que las reglas privadas de Firebase aún no permitan esta sección. Código: " + (error.code || "error") + ".</p>";
     }
   }
+
+  const diarySearchInput = document.getElementById("diarySearch");
+  const diarySearchStatus = document.getElementById("diarySearchStatus");
+  function filterDiaryEntries() {
+    if (!diaryEntries || !diarySearchInput) return;
+    const query = diarySearchInput.value.trim().toLocaleLowerCase("es");
+    const cards = [...diaryEntries.querySelectorAll("article.entry")];
+    let visible = 0;
+    cards.forEach(card => {
+      const matches = !query || (card.dataset.search || "").includes(query);
+      card.classList.toggle("hidden", !matches);
+      if (matches) visible++;
+    });
+    if (diarySearchStatus) {
+      if (!loadedDiaryRecords.length) diarySearchStatus.textContent = "";
+      else if (!query) diarySearchStatus.textContent = loadedDiaryRecords.length + (loadedDiaryRecords.length === 1 ? " página guardada." : " páginas guardadas.");
+      else diarySearchStatus.textContent = visible + (visible === 1 ? " resultado." : " resultados.") + (visible ? "" : " Prueba otra palabra o etiqueta.");
+    }
+    let empty = document.getElementById("diarySearchEmpty");
+    if (!empty) {
+      empty = document.createElement("p");
+      empty.id = "diarySearchEmpty";
+      empty.className = "muted hidden";
+      diaryEntries.appendChild(empty);
+    }
+    empty.textContent = query && visible === 0 && cards.length ? "No encuentro páginas con esa búsqueda. 💗" : "";
+    empty.classList.toggle("hidden", !(query && visible === 0 && cards.length));
+  }
+  if (diarySearchInput) diarySearchInput.addEventListener("input", filterDiaryEntries);
 
   document.getElementById("logoutBtn").addEventListener("click", () => auth.signOut());
 
