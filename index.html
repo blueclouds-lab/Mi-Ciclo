@@ -737,7 +737,7 @@
       date.textContent = formatDate(record.date);
       caption.appendChild(date);
       const excerpt = document.createElement("p");
-      const plainText = String(record.text || "").replace(/\\s+/g, " ").trim();
+      const plainText = String(record.text || "").replace(/\s+/g, " ").trim();
       excerpt.textContent = plainText.length > 95 ? plainText.slice(0, 92) + "…" : (plainText || "Una página que has guardado con cariño.");
       caption.appendChild(excerpt);
       card.appendChild(caption);
