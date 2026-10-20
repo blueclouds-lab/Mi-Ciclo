@@ -58,6 +58,11 @@
     .entry p { margin: 0; color: #806875; font-size: 13px; line-height: 1.55; }
     .diary-tags { grid-column: 1 / -1; display:flex; flex-wrap:wrap; gap:6px; margin-top:3px; }
     .diary-tag { display:inline-block; border:1px solid #efd4dc; background:#fff0f4; color:#87586a; border-radius:999px; padding:3px 9px; font-size:12px; }
+    .diary-photo-grid { grid-column:1 / -1; display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:8px; margin-top:8px; }
+    .diary-photo { width:100%; aspect-ratio:1; object-fit:cover; border-radius:12px; border:1px solid #ead4da; background:#fff0f4; }
+    .favorite-btn { min-width:140px; }
+    .monthly-summary { margin-top:18px; padding:16px; border:1px solid #ead4da; border-radius:17px; background:#fffdf8; }
+    .monthly-summary h3 { margin:0 0 8px; color:#704b5a; font-size:16px; }
     .entry button { grid-column: 1 / -1; width: auto; justify-self: start; min-width: 140px; margin-top: 8px; padding: 8px 12px; font-size: 13px; }
     .calendar-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin: 12px 0 18px; }
     .calendar-head h3 { margin:0; text-align:center; font-family:Georgia,serif; color:#704b5a; font-size:20px; font-weight:500; }
@@ -271,6 +276,10 @@
         <label for="diaryTags">Etiquetas (opcional, separadas por comas)</label>
         <input id="diaryTags" type="text" maxlength="240" placeholder="Ej.: autocuidado, trabajo, algo bonito">
         <p class="hint">Puedes añadir palabras para encontrar después tus páginas más fácilmente.</p>
+        <label for="diaryPhotos">Añadir fotos (opcional, hasta 3)</label>
+        <input id="diaryPhotos" type="file" accept="image/*" multiple>
+        <p class="hint">Las fotos se reducen para ocupar menos espacio y se guardan en tu registro privado.</p>
+        <div id="diaryPhotoPreview" class="diary-photo-grid" aria-live="polite"></div>
         <label for="diaryText">Lo que quiero contarme</label>
         <textarea id="diaryText" maxlength="8000" rows="6" required placeholder="Escribe aquí tus pensamientos, emociones, recuerdos o cualquier cosa que necesites sacar…"></textarea>
         <button id="diarySaveBtn" type="submit">Guardar en mi diario</button>
@@ -282,6 +291,8 @@
       <label for="diarySearch">Buscar en mi diario</label>
       <input id="diarySearch" type="search" placeholder="Buscar en títulos, textos, estados de ánimo o etiquetas…">
       <p id="diarySearchStatus" class="hint" aria-live="polite"></p>
+      <label for="favoritesOnly">Mostrar solo recuerdos favoritos</label>
+      <input id="favoritesOnly" type="checkbox" style="width:auto; accent-color:#c98fa2">
       <div id="diaryEntries"><p class="muted">Cargando tu diario…</p></div>
     </div>
     <div class="panel hidden" data-tab-panel="relaciones">
@@ -360,6 +371,23 @@
       <p class="hint">Este resumen solo analiza las notas que tú has escrito; no interpreta síntomas ni sustituye la orientación de un profesional sanitario.</p>
     </div>
     <div class="panel hidden" data-tab-panel="historial">
+      <h2>Mi resumen mensual</h2>
+      <p class="hint">Elige un mes para revisar lo que has anotado en tu ciclo y en tu diario. Solo resume tus registros, no hace predicciones médicas.</p>
+      <label for="summaryMonth">Mes que quiero consultar</label>
+      <input id="summaryMonth" type="month">
+      <div class="stats" style="margin-top:14px">
+        <div class="stat"><span>Menstruaciones anotadas</span><strong id="monthlyPeriodCount">0</strong><span>primeros días registrados</span></div>
+        <div class="stat"><span>Páginas del diario</span><strong id="monthlyDiaryCount">0</strong><span>recuerdos escritos</span></div>
+        <div class="stat"><span>Estado de ánimo más anotado</span><strong id="monthlyTopMood">—</strong><span id="monthlyMoodCount">Sin registros este mes</span></div>
+        <div class="stat"><span>Etiquetas más usadas</span><strong id="monthlyTopTags">—</strong><span id="monthlyTagCount">Sin etiquetas este mes</span></div>
+      </div>
+      <div class="circle-charts">
+        <div class="circle-card"><h3>Ánimo del mes</h3><div id="monthlyMoodDonut" class="circle-visual"></div><div id="monthlyMoodLegend" class="circle-legend"></div></div>
+        <div class="circle-card"><h3>Síntomas mencionados</h3><div id="monthlySymptomDonut" class="circle-visual"></div><div id="monthlySymptomLegend" class="circle-legend"></div></div>
+      </div>
+      <p id="monthlySummaryNote" class="hint" style="margin-top:12px">Cuando haya registros, aquí aparecerá tu resumen mensual.</p>
+    </div>
+    <div class="panel hidden" data-tab-panel="historial">
       <h2>Mis datos y privacidad</h2>
       <p id="accountInfo" class="muted"></p>
       <p class="hint">Puedes guardar una copia de tus registros en tu dispositivo. El archivo incluirá información íntima: guárdalo en un lugar seguro.</p>
@@ -404,11 +432,55 @@
   const diaryStatus = document.getElementById("diaryStatus");
   let editingDiaryId = null;
   let editingDiaryCreatedAt = null;
+  let editingDiaryPhotos = [];
+  const diaryPhotoInput = document.getElementById("diaryPhotos");
+  const diaryPhotoPreview = document.getElementById("diaryPhotoPreview");
+  function renderDiaryPhotoPreview(photos) {
+    diaryPhotoPreview.textContent = "";
+    (photos || []).forEach((photo, index) => {
+      if (!photo || typeof photo !== "string" || !photo.startsWith("data:image/")) return;
+      const img = document.createElement("img"); img.className = "diary-photo"; img.src = photo; img.alt = "Foto del recuerdo " + (index + 1);
+      diaryPhotoPreview.appendChild(img);
+    });
+  }
+  function readCompressedPhoto(file) {
+    return new Promise((resolve, reject) => {
+      if (!file || !file.type.startsWith("image/")) return reject(new Error("Elige un archivo de imagen."));
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("No se ha podido leer una de las fotos."));
+      reader.onload = () => {
+        const image = new Image();
+        image.onerror = () => reject(new Error("Una de las fotos no se ha podido abrir."));
+        image.onload = () => {
+          const scale = Math.min(1, 900 / Math.max(image.width, image.height));
+          const canvas = document.createElement("canvas"); canvas.width = Math.max(1, Math.round(image.width * scale)); canvas.height = Math.max(1, Math.round(image.height * scale));
+          const context = canvas.getContext("2d");
+          if (!context) return reject(new Error("No se ha podido preparar la foto."));
+          context.fillStyle = "#fffaf2"; context.fillRect(0, 0, canvas.width, canvas.height); context.drawImage(image, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL("image/jpeg", 0.68));
+        };
+        image.src = String(reader.result);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  diaryPhotoInput.addEventListener("change", async () => {
+    const files = [...(diaryPhotoInput.files || [])];
+    if (files.length + editingDiaryPhotos.length > 3) { diaryStatus.textContent = "Puedes conservar hasta 3 fotos por página."; diaryPhotoInput.value = ""; return; }
+    try {
+      const newPhotos = await Promise.all(files.map(readCompressedPhoto));
+      editingDiaryPhotos = [...editingDiaryPhotos, ...newPhotos].slice(0, 3); renderDiaryPhotoPreview(editingDiaryPhotos);
+      diaryStatus.textContent = editingDiaryPhotos.length + " foto(s) preparadas para este recuerdo.";
+    } catch (error) { diaryStatus.textContent = error.message || "No se ha podido preparar la foto."; }
+    diaryPhotoInput.value = "";
+  });
   const diarySaveButton = document.getElementById("diarySaveBtn");
   const diaryCancelEditButton = document.getElementById("diaryCancelEditBtn");
   function cancelDiaryEdit() {
     editingDiaryId = null;
     editingDiaryCreatedAt = null;
+    editingDiaryPhotos = [];
+    renderDiaryPhotoPreview(editingDiaryPhotos);
     document.getElementById("diaryForm").reset();
     diarySaveButton.textContent = "Guardar en mi diario";
     diaryCancelEditButton.classList.add("hidden");
@@ -569,6 +641,8 @@
       mood: document.getElementById("diaryMood").value,
       text: document.getElementById("diaryText").value.trim(),
       tags: [...new Set(document.getElementById("diaryTags").value.split(",").map(tag => tag.trim()).filter(Boolean).map(tag => tag.slice(0, 40)))].slice(0, 8),
+      favorite: false,
+      photos: editingDiaryPhotos.slice(0, 3),
       createdAt: firebase.database.ServerValue.TIMESTAMP
     };
     if (!record.date || !record.text) {
@@ -580,7 +654,9 @@
     diaryStatus.textContent = "Guardando tu página…";
     try {
       if (editingDiaryId) {
+        const existing = loadedDiaryRecords.find(item => item.id === editingDiaryId);
         record.createdAt = editingDiaryCreatedAt;
+        record.favorite = existing ? !!existing.favorite : false;
         await db.ref("users/" + user.uid + "/diaryEntries/" + editingDiaryId).set(record);
         diaryStatus.textContent = "Tu página se ha actualizado. 💗";
         cancelDiaryEdit();
@@ -591,6 +667,7 @@
         document.getElementById("diaryMood").value = "";
         document.getElementById("diaryTags").value = "";
         document.getElementById("diaryText").value = "";
+        editingDiaryPhotos = []; renderDiaryPhotoPreview(editingDiaryPhotos); diaryPhotoInput.value = "";
       }
       await loadDiaryEntries(user.uid);
     } catch (error) {
@@ -608,6 +685,7 @@
       const records = Object.entries(snapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
       records.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")) || Number(b.createdAt || 0) - Number(a.createdAt || 0));
       loadedDiaryRecords = records;
+      renderMonthlySummary();
       renderCalendar();
       if (selectedCalendarDate) showCalendarDay(selectedCalendarDate);
       diaryEntries.textContent = "";
@@ -620,6 +698,7 @@
         const item = document.createElement("article");
         item.className = "entry";
         item.dataset.search = [record.date, record.title, record.mood, record.text, ...(Array.isArray(record.tags) ? record.tags : [])].join(" ").toLocaleLowerCase("es");
+        item.dataset.favorite = String(!!record.favorite);
         const heading = document.createElement("strong");
         heading.textContent = (record.title ? record.title + " · " : "") + formatDate(record.date);
         item.appendChild(heading);
@@ -632,6 +711,14 @@
         body.style.whiteSpace = "pre-wrap";
         body.textContent = record.text || "";
         item.appendChild(body);
+        if (Array.isArray(record.photos) && record.photos.length) {
+          const photoGrid = document.createElement("div"); photoGrid.className = "diary-photo-grid";
+          record.photos.slice(0, 3).forEach((photo, index) => {
+            if (typeof photo !== "string" || !photo.startsWith("data:image/")) return;
+            const img = document.createElement("img"); img.className = "diary-photo"; img.src = photo; img.alt = "Foto del recuerdo " + (index + 1); photoGrid.appendChild(img);
+          });
+          if (photoGrid.childElementCount) item.appendChild(photoGrid);
+        }
         if (Array.isArray(record.tags) && record.tags.length) {
           const tagList = document.createElement("div");
           tagList.className = "diary-tags";
@@ -643,6 +730,19 @@
           });
           item.appendChild(tagList);
         }
+        const favorite = document.createElement("button");
+        favorite.type = "button"; favorite.className = "favorite-btn " + (record.favorite ? "" : "secondary");
+        favorite.textContent = record.favorite ? "♥ En favoritos" : "♡ Añadir a favoritos";
+        favorite.setAttribute("aria-pressed", String(!!record.favorite));
+        favorite.addEventListener("click", async () => {
+          favorite.disabled = true;
+          try {
+            await db.ref("users/" + uid + "/diaryEntries/" + record.id).update({ favorite: !record.favorite });
+            await loadDiaryEntries(uid);
+            diaryStatus.textContent = record.favorite ? "Recuerdo quitado de favoritos." : "Recuerdo guardado en favoritos. 💗";
+          } catch (error) { favorite.disabled = false; diaryStatus.textContent = "No se ha podido cambiar el favorito. Código: " + (error.code || "error"); }
+        });
+        item.appendChild(favorite);
         const edit = document.createElement("button");
         edit.type = "button";
         edit.textContent = "Editar esta página";
@@ -654,6 +754,8 @@
           document.getElementById("diaryMood").value = record.mood || "";
           document.getElementById("diaryTags").value = Array.isArray(record.tags) ? record.tags.join(", ") : "";
           document.getElementById("diaryText").value = record.text || "";
+          editingDiaryPhotos = Array.isArray(record.photos) ? record.photos.filter(photo => typeof photo === "string" && photo.startsWith("data:image/")).slice(0, 3) : [];
+          renderDiaryPhotoPreview(editingDiaryPhotos);
           diarySaveButton.textContent = "Guardar cambios";
           diaryCancelEditButton.classList.remove("hidden");
           diaryStatus.textContent = "Estás editando una página guardada. 💗";
@@ -693,7 +795,9 @@
     const cards = [...diaryEntries.querySelectorAll("article.entry")];
     let visible = 0;
     cards.forEach(card => {
-      const matches = !query || (card.dataset.search || "").includes(query);
+      const matchesQuery = !query || (card.dataset.search || "").includes(query);
+      const matchesFavorite = !document.getElementById("favoritesOnly").checked || card.dataset.favorite === "true";
+      const matches = matchesQuery && matchesFavorite;
       card.classList.toggle("hidden", !matches);
       if (matches) visible++;
     });
@@ -713,6 +817,7 @@
     empty.classList.toggle("hidden", !(query && visible === 0 && cards.length));
   }
   if (diarySearchInput) diarySearchInput.addEventListener("input", filterDiaryEntries);
+  document.getElementById("favoritesOnly").addEventListener("change", filterDiaryEntries);
 
   document.getElementById("logoutBtn").addEventListener("click", () => auth.signOut());
 
@@ -927,6 +1032,43 @@
     });
   }
 
+  function renderMonthlySummary() {
+    const monthInput = document.getElementById("summaryMonth");
+    if (!monthInput) return;
+    const now = new Date();
+    const month = monthInput.value || now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+    if (!monthInput.value) monthInput.value = month;
+    const cycle = loadedCycleRecords.filter(record => String(record.periodDate || "").startsWith(month));
+    const diary = loadedDiaryRecords.filter(record => String(record.date || "").startsWith(month));
+    document.getElementById("monthlyPeriodCount").textContent = String(new Set(cycle.map(record => record.periodDate).filter(Boolean)).size);
+    document.getElementById("monthlyDiaryCount").textContent = String(diary.length);
+    const moods = {};
+    [...cycle.map(record => record.mood), ...diary.map(record => record.mood)].forEach(mood => { const value = String(mood || "").trim(); if (value) moods[value] = (moods[value] || 0) + 1; });
+    const topMood = Object.entries(moods).sort((a,b) => b[1] - a[1])[0];
+    document.getElementById("monthlyTopMood").textContent = topMood ? topMood[0] : "—";
+    document.getElementById("monthlyMoodCount").textContent = topMood ? topMood[1] + (topMood[1] === 1 ? " anotación" : " anotaciones") : "Sin registros este mes";
+    renderDonutChart("monthlyMoodDonut", "monthlyMoodLegend", Object.entries(moods).map(([label,count]) => ({label,count})), "No has anotado estados de ánimo este mes.");
+    const tags = {};
+    diary.forEach(record => (Array.isArray(record.tags) ? record.tags : []).forEach(tag => { const value = String(tag || "").trim(); if (value) tags[value] = (tags[value] || 0) + 1; }));
+    const topTags = Object.entries(tags).sort((a,b) => b[1] - a[1]).slice(0, 2);
+    document.getElementById("monthlyTopTags").textContent = topTags.length ? topTags.map(([tag]) => tag).join(" · ") : "—";
+    document.getElementById("monthlyTagCount").textContent = topTags.length ? topTags.map(([tag,count]) => tag + ": " + count).join(" · ") : "Sin etiquetas este mes";
+    const symptomText = cycle.map(record => String(record.symptoms || "").toLocaleLowerCase("es")).join(" ");
+    const categories = [
+      ["Dolor o cólicos", /dolor|c[oó]lico|retortij[oó]n|molestia/g], ["Cansancio", /cansancio|cansada|cansado|fatiga|agotamiento/g],
+      ["Dolor de cabeza", /dolor de cabeza|migra[nñ]a|cefalea/g], ["Hinchazón", /hinchaz[oó]n|hinchada|hinchado|inflamaci[oó]n/g],
+      ["Cambios de ánimo", /irritable|irritabilidad|ansiosa|ansioso|triste|sensibl[e]|cambios de [aá]nimo/g],
+      ["Sueño", /insomnio|sue[nñ]o|dorm[ií]/g], ["Náuseas", /n[aá]useas|n[aá]usea/g]
+    ];
+    const symptoms = categories.map(([label,pattern]) => { const matches = symptomText.match(pattern); return {label,count:matches ? matches.length : 0}; }).filter(item => item.count);
+    renderDonutChart("monthlySymptomDonut", "monthlySymptomLegend", symptoms, "No hay síntomas mencionados en los registros de este mes.");
+    const totalRecords = cycle.length + diary.length;
+    document.getElementById("monthlySummaryNote").textContent = totalRecords
+      ? "Resumen de " + month + ": " + totalRecords + (totalRecords === 1 ? " registro" : " registros") + ". Los recuentos reflejan solo lo que has anotado; no indican por sí mismos una tendencia médica."
+      : "Todavía no hay registros en " + month + ". Cuando añadas páginas al diario o registros menstruales, aparecerán aquí.";
+  }
+  document.getElementById("summaryMonth").addEventListener("change", renderMonthlySummary);
+
   function renderPersonalStats(records) {
     const dates = [...new Set(records.map(r => r.periodDate).filter(Boolean))].sort();
     const lengths = [];
@@ -993,6 +1135,7 @@
     }
     const avg = lengths.length ? Math.round(lengths.reduce((sum, x) => sum + x.days, 0) / lengths.length) : null;
     renderPersonalStats(records);
+    renderMonthlySummary();
     document.getElementById("avgCycle").textContent = avg ? avg + " días" : "—";
     const nextEl = document.getElementById("nextPeriod");
     const noteEl = document.getElementById("predictionNote");
