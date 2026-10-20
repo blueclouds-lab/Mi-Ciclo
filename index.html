@@ -578,6 +578,32 @@
       }
     }
 
+  
+    /* Acabado final: pequeños detalles florales, accesibilidad y comodidad móvil */
+    header::after {
+      content: "✿  ·  ☾  ·  ✿";
+      display: block;
+      margin: 17px auto 0;
+      color: #c98fa2;
+      font-size: 13px;
+      letter-spacing: 4px;
+      opacity: .78;
+    }
+    button:focus-visible, a:focus-visible {
+      outline: 2px solid #a9667e;
+      outline-offset: 3px;
+    }
+    .panel {
+      background-image: radial-gradient(ellipse at 100% 0%, rgba(247,232,236,.42), transparent 210px);
+    }
+    @media (max-width: 560px) {
+      body { padding: 18px 11px; }
+      header { padding: 15px 0 22px; }
+      .panel { padding: 18px 15px; border-radius: 20px; }
+      .tabs { gap: 7px; }
+      .tabs button { padding: 9px 12px; font-size: 13px; }
+    }
+
   </style>
 </head>
 <body>
