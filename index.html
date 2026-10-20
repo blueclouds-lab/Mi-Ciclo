@@ -428,6 +428,23 @@
       opacity:.76;
       pointer-events:none;
     }
+    .emotion-corner {
+      margin:18px 0 24px;
+      padding:20px;
+      border:1px solid #efdee2;
+      border-radius:20px;
+      background:linear-gradient(145deg, #fffaf6, #fbf0f3);
+      position:relative;
+      overflow:hidden;
+    }
+    .emotion-corner h2 { margin-top:0; }
+    .emotion-options { display:grid; grid-template-columns:repeat(auto-fit,minmax(105px,1fr)); gap:8px; margin:12px 0; }
+    .emotion-option { display:flex; align-items:center; justify-content:center; gap:6px; min-height:44px; padding:9px 10px; border:1px solid #ead2da; border-radius:14px; background:#fffaf7; color:#704b5a; cursor:pointer; }
+    .emotion-option:has(input:checked) { border-color:#c98fa2; background:#f8e8ed; box-shadow:0 0 0 2px rgba(201,143,162,.12); }
+    .emotion-option input { accent-color:#c98fa2; }
+    .emotion-record { padding:11px 0; border-bottom:1px solid #efdee2; }
+    .emotion-record:last-child { border-bottom:0; }
+    .emotion-record strong { color:#87586a; }
     .daily-phrase {
       position:relative;
       overflow:hidden;
@@ -539,6 +556,29 @@
         <p class="daily-phrase-symbols" id="dailyPhraseSymbols" aria-hidden="true">✿ ♡ ☾</p>
         <blockquote id="dailyPhraseText">No tienes que poder con todo; también mereces cuidado.</blockquote>
         <p class="daily-phrase-date" id="dailyPhraseDate"></p>
+      </section>
+      <section class="emotion-corner" aria-labelledby="emotionCornerTitle">
+        <p class="daily-phrase-kicker">♡ Un momento para escucharte</p>
+        <h2 id="emotionCornerTitle">Mi rincón de emociones</h2>
+        <p class="hint">No hay emociones correctas o incorrectas. Elige la que más se acerque a cómo estás hoy; si quieres, añade unas palabras para ti.</p>
+        <form id="emotionForm">
+          <label for="emotionDate">Fecha</label>
+          <input id="emotionDate" type="date" required>
+          <span class="field-label">¿Cómo te sientes?</span>
+          <div class="emotion-options">
+            <label class="emotion-option"><input type="radio" name="dailyEmotion" value="Feliz" required> ☀️ Feliz</label>
+            <label class="emotion-option"><input type="radio" name="dailyEmotion" value="Tranquila"> 🌷 Tranquila</label>
+            <label class="emotion-option"><input type="radio" name="dailyEmotion" value="Sensible"> 💗 Sensible</label>
+            <label class="emotion-option"><input type="radio" name="dailyEmotion" value="Agobiada"> 🌊 Agobiada</label>
+            <label class="emotion-option"><input type="radio" name="dailyEmotion" value="Cansada"> 🌙 Cansada</label>
+            <label class="emotion-option"><input type="radio" name="dailyEmotion" value="Triste"> 🌧️ Triste</label>
+          </div>
+          <label for="emotionNote">Una nota para mí (opcional)</label>
+          <textarea id="emotionNote" rows="2" maxlength="1200" placeholder="¿Qué te ayudaría hoy?"></textarea>
+          <button id="emotionSaveBtn" type="submit">Guardar cómo me siento</button>
+        </form>
+        <p id="emotionStatus" class="status" role="status"></p>
+        <div id="emotionHistory" aria-live="polite"><p class="muted">Tus registros aparecerán aquí.</p></div>
       </section>
       <div class="mini-calendar">
         <div class="mini-calendar-top">
@@ -1187,6 +1227,67 @@
     }
   }
 
+  const emotionForm = document.getElementById("emotionForm");
+  const emotionDateInput = document.getElementById("emotionDate");
+  const emotionToday = new Date();
+  emotionDateInput.value = emotionToday.getFullYear() + "-" + String(emotionToday.getMonth() + 1).padStart(2, "0") + "-" + String(emotionToday.getDate()).padStart(2, "0");
+
+  function renderEmotionHistory(records) {
+    const target = document.getElementById("emotionHistory");
+    if (!target) return;
+    const emotions = (records || []).filter(record => record.kind === "emotion").slice(0, 6);
+    target.textContent = "";
+    if (!emotions.length) {
+      target.innerHTML = "<p class='muted'>Tu pequeño historial irá creciendo aquí, a tu ritmo. ♡</p>";
+      return;
+    }
+    const heading = document.createElement("h3");
+    heading.textContent = "Tus últimos momentos";
+    target.appendChild(heading);
+    emotions.forEach(record => {
+      const item = document.createElement("div");
+      item.className = "emotion-record";
+      const title = document.createElement("strong");
+      title.textContent = (record.mood || "Emoción registrada") + " · " + formatDate(record.date);
+      const note = document.createElement("p");
+      note.textContent = record.text || "Hoy me he regalado un momento para escucharme.";
+      item.append(title, note);
+      target.appendChild(item);
+    });
+  }
+
+  emotionForm.addEventListener("submit", async event => {
+    event.preventDefault();
+    const user = auth.currentUser;
+    if (!user) { document.getElementById("emotionStatus").textContent = "Inicia sesión para guardar este momento."; return; }
+    const selected = emotionForm.querySelector('input[name="dailyEmotion"]:checked');
+    if (!selected || !emotionDateInput.value) { document.getElementById("emotionStatus").textContent = "Elige una fecha y una emoción."; return; }
+    const button = document.getElementById("emotionSaveBtn");
+    const note = document.getElementById("emotionNote").value.trim();
+    const record = {
+      kind: "emotion",
+      date: emotionDateInput.value,
+      title: "Mi rincón de emociones",
+      mood: selected.value,
+      text: note || ("Hoy me siento: " + selected.value + "."),
+      tags: ["emociones"],
+      favorite: false,
+      photos: [],
+      createdAt: firebase.database.ServerValue.TIMESTAMP
+    };
+    button.disabled = true;
+    document.getElementById("emotionStatus").textContent = "Guardando este momento con cariño…";
+    try {
+      await db.ref("users/" + user.uid + "/diaryEntries").push(record);
+      document.getElementById("emotionNote").value = "";
+      selected.checked = false;
+      document.getElementById("emotionStatus").textContent = "Tu emoción se ha guardado en tu espacio privado. ♡";
+      await loadDiaryEntries(user.uid);
+    } catch (error) {
+      document.getElementById("emotionStatus").textContent = "No se ha podido guardar. Comprueba las reglas privadas del diario. Código: " + (error.code || "error");
+    } finally { button.disabled = false; }
+  });
+
   async function loadDiaryEntries(uid) {
     if (!diaryEntries) return;
     diaryEntries.innerHTML = "<p class='muted'>Cargando tu diario…</p>";
@@ -1195,6 +1296,7 @@
       const records = Object.entries(snapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
       records.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")) || Number(b.createdAt || 0) - Number(a.createdAt || 0));
       loadedDiaryRecords = records;
+      renderEmotionHistory(records);
       renderFavoriteAlbum(records);
       renderMonthlySummary();
       renderCalendar();
