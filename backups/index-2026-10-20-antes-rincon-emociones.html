@@ -1,0 +1,2011 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fff8f3">
+  <title>Mi Ciclo · Tu espacio íntimo</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #fff8f3; --panel: #fffaf2; --text: #59414a; --muted: #967985;
+      --accent: #c98fa2; --border: #efdee2; --soft-rose: #fbf0f3;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; min-height: 100vh;
+      background: radial-gradient(ellipse at 12% 0%, #f7e8ec 0%, transparent 36rem), linear-gradient(180deg, #fffaf5 0%, var(--bg) 55%, #fff7f3 100%);
+      color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 28px 16px; line-height: 1.55; -webkit-font-smoothing: antialiased;
+    }
+    main { max-width: 960px; margin: auto; }
+    header { text-align: center; padding: 20px 0 26px; }
+    .moon { display: inline-flex; width: 48px; height: 48px; align-items: center; justify-content: center; border: 1px solid #e8cbd4; border-radius: 50%; color: #87586a; background: rgba(255,250,242,.85); font-size: 27px; box-shadow: 0 5px 18px rgba(111,69,83,.06); }
+    h1 { margin: 12px 0 5px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(32px,8vw,39px); font-weight: 500; letter-spacing: -.8px; color: #704b5a; }
+    .subtitle, .muted { color: var(--muted); line-height: 1.65; }
+    .subtitle { margin: 5px auto 0; max-width: 330px; font-size: 15px; }
+    .panel { min-width: 0; background: rgba(255,250,242,.96); border: 1px solid var(--border); border-radius: 23px; padding: 24px; margin: 0; box-shadow: 0 12px 32px rgba(111,69,83,.075); }
+    #authPanel { max-width: 560px; margin: 0 auto; }
+    #appPanel:not(.hidden) { display: block; }
+    .tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0 auto 18px; }
+    .tabs button { width: auto; margin: 0; padding: 10px 16px; border-radius: 42% 42% 18% 18% / 30% 30% 18% 18%; background: #fffaf2; color: #87586a; border-color: #e7cbd4; border-width: .75px; box-shadow: none; transition: background .18s ease, transform .18s ease; }
+    .tabs button[aria-selected="true"] { background: #c98fa2; color: #fffaf7; border-color: #c98fa2; }
+    .tabs button[aria-selected="true"]::before { content: "✿"; display: inline-block; margin-right: 5px; }
+    .tabs button:focus-visible { outline: 2px solid #b8758d; outline-offset: 3px; }
+    .tabs button:hover { transform: translateY(-1px); }
+    #appPanel > .panel { margin-bottom: 16px; }
+    #appPanel > .panel.hidden { display: none; }
+    h2 { font-family: Georgia, "Times New Roman", serif; font-size: 22px; font-weight: 500; color: #704b5a; margin: 0 0 10px; }
+    label { display: block; margin: 14px 0 7px; font-size: 13px; font-weight: 600; color: #765965; }
+    input, textarea, button { width: 100%; min-width: 0; font: inherit; border-radius: 13px; padding: 12px 13px; }
+    input, textarea, select { color: var(--text); background: #fffdf9; border: 1px solid #e7d2d8; outline: none; transition: border-color .18s ease, box-shadow .18s ease; }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,143,162,.16); }
+    select { width: 100%; border-radius: 13px; padding: 12px 13px; font: inherit; }
+    textarea { resize: vertical; min-height: 85px; }
+    button { border: 1px solid transparent; background: var(--accent); color: #fffaf7; font-weight: 600; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 12px rgba(135,88,106,.10); transition: transform .15s ease, background .15s ease, box-shadow .15s ease; }
+    button:hover { background: #b97c91; box-shadow: 0 6px 16px rgba(135,88,106,.15); }
+    button:active { transform: translateY(1px); }
+    button.secondary { background: transparent; color: #87586a; border: 1px solid #dfc2cc; box-shadow: none; }
+    button.secondary:hover { background: var(--soft-rose); }
+    button:disabled { opacity: .55; cursor: wait; }
+    #authForm { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 12px; }
+    #authForm label, #authForm input, #loginBtn { grid-column: 1 / -1; }
+    #authForm button { margin-top: 9px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .status { margin-top: 15px; font-size: 14px; line-height: 1.5; }
+    .hidden { display: none; }
+    .entry { display: grid; grid-template-columns: minmax(94px,auto) 1fr; align-items: start; gap: 4px 14px; background: #fffdf9; border: 1px solid #ead9dd; border-radius: 14px; padding: 14px 16px; margin: 9px 0; overflow-wrap: anywhere; box-shadow: 0 3px 10px rgba(111,69,83,.025); }
+    .entry.hidden { display: none; }
+    .entry strong { display: inline-flex; align-items: center; color: #704b5a; font-size: 14px; font-weight: 650; margin: 0; }
+    .entry p { margin: 0; color: #806875; font-size: 13px; line-height: 1.55; }
+    .diary-tags { grid-column: 1 / -1; display:flex; flex-wrap:wrap; gap:6px; margin-top:3px; }
+    .diary-tag { display:inline-block; border:1px solid #efd4dc; background:#fff0f4; color:#87586a; border-radius:999px; padding:3px 9px; font-size:12px; }
+    .diary-photo-grid { grid-column:1 / -1; display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:8px; margin-top:8px; }
+    .diary-photo { width:100%; aspect-ratio:1; object-fit:cover; border-radius:12px; border:1px solid #ead4da; background:#fff0f4; }
+    .diary-photo-wrap { min-width:0; }
+    .diary-photo-wrap button { margin-top:4px; padding:5px 7px; font-size:11px; }
+    .favorite-btn { min-width:140px; }
+    .monthly-summary { margin-top:18px; padding:16px; border:1px solid #ead4da; border-radius:17px; background:#fffdf8; }
+    .favorite-album { margin:18px 0 24px; padding:16px; border:1px solid #ead4da; border-radius:18px; background:linear-gradient(145deg,#fff8fa,#fffdf8); }
+    .favorite-album h3 { margin:0 0 5px; color:#704b5a; font-family:Georgia,serif; font-size:19px; font-weight:500; }
+    .favorite-album-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(145px,1fr)); gap:11px; margin-top:13px; }
+    .favorite-memory { min-width:0; overflow:hidden; border:1px solid #efdce2; border-radius:14px; background:#fffdf9; }
+    .favorite-memory img, .favorite-memory-placeholder { display:flex; width:100%; aspect-ratio:4 / 3; object-fit:cover; align-items:center; justify-content:center; background:#f9e9ee; color:#b17c91; font-size:28px; }
+    .favorite-memory-caption { padding:10px; }
+    .favorite-memory-caption strong { display:block; color:#704b5a; font-size:13px; line-height:1.4; overflow-wrap:anywhere; }
+    .favorite-memory-caption p { margin:4px 0 0; color:#967985; font-size:11px; line-height:1.45; overflow-wrap:anywhere; }
+    .monthly-summary h3 { margin:0 0 8px; color:#704b5a; font-size:16px; }
+    .entry button { grid-column: 1 / -1; width: auto; justify-self: start; min-width: 140px; margin-top: 8px; padding: 8px 12px; font-size: 13px; }
+    .calendar-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin: 12px 0 18px; }
+    .calendar-head h3 { margin:0; text-align:center; font-family:Georgia,serif; color:#704b5a; font-size:20px; font-weight:500; }
+    .calendar-head button { width:42px; height:40px; margin:0; padding:0; border:1px solid #ead4da; background:#fffdf9; color:#87586a; box-shadow:none; font-size:20px; }
+    .mini-calendar { background:#fffdf9; border:1px solid #ead9dd; border-radius:16px; padding:11px 13px; margin-bottom:13px; max-width:520px; margin-left:auto; margin-right:auto; }
+    .mini-calendar-top { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:5px; }
+    .mini-calendar-top h2 { margin:0; font-size:18px; }
+    .mini-calendar-top button { width:auto; margin:0; padding:5px 9px; font-size:11px; white-space:nowrap; }
+    .mini-calendar-grid { gap:2px; }
+    .mini-calendar-grid .calendar-weekday { padding:2px 0; font-size:9px; }
+    .mini-calendar-grid .calendar-day { min-height:23px; border-radius:6px; font-size:10px; }
+    .mini-calendar-grid .calendar-day.empty { background:transparent; }
+    .mini-calendar .calendar-head { margin:2px 0 6px !important; }
+    .mini-calendar .calendar-head h3 { font-size:16px; }
+    .mini-calendar .hint { font-size:11px; line-height:1.4; }
+    .calendar-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:5px; }
+    .calendar-weekday { text-align:center; padding:7px 0; color:#967985; font-size:11px; font-weight:700; }
+    .calendar-day { min-height:42px; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; border-radius:12px; border:1px solid transparent; padding:2px 0; font:inherit; font-size:13px; color:#59414a; background:#fffdf9; cursor:pointer; }
+    .calendar-day:focus-visible { outline:2px solid #b97c91; outline-offset:2px; }
+    .calendar-day.selected { box-shadow:inset 0 0 0 2px #87586a; }
+    .day-content { display:flex; align-items:center; justify-content:center; gap:2px; width:100%; line-height:1.15; white-space:nowrap; }
+    .day-number { line-height:1.15; }
+    .day-markers { display:inline-flex; align-items:center; justify-content:center; gap:1px; min-height:0; }
+    .day-marker { display:inline-flex; align-items:center; justify-content:center; font-style:normal; font-size:9px; line-height:1; }
+    .day-marker.symptoms { color:#a45f78; }
+    .day-marker.diary { color:#8d79ad; }
+    .day-marker.relation { color:#b98735; }
+    .calendar-day.actual .day-marker { filter:brightness(1.25); }
+    .mini-calendar-grid .day-content { gap:1px; }
+    .mini-calendar-grid .day-marker { font-size:7px; }
+    .self-care-card { border:1px solid #efdee2; border-radius:15px; background:#fffdf9; padding:13px 15px; margin:10px 0; }
+    .self-care-card h3 { margin:0 0 5px; font-size:16px; color:#87586a; }
+    .self-care-meta { color:#967985; font-size:12px; margin-bottom:7px; }
+    .self-care-needs { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+    .self-care-needs span { display:inline-block; border:1px solid #efdee2; border-radius:999px; background:#fbf0f3; color:#87586a; padding:3px 9px; font-size:12px; }
+    .self-care-checks { display:grid; grid-template-columns:repeat(auto-fit,minmax(145px,1fr)); gap:8px; margin:8px 0 14px; }
+    .self-care-checks label { display:flex; align-items:center; gap:8px; margin:0; padding:9px 10px; border:1px solid #efdee2; border-radius:12px; background:#fffdf9; font-weight:400; }
+    .self-care-checks input { width:auto; margin:0; accent-color:#c98fa2; }
+    .daily-phrase { position:relative; overflow:hidden; margin:0 0 16px; padding:19px 20px; border:1px solid #ead2da; border-radius:18px; background:linear-gradient(135deg,#fff1f5 0%,#fffaf4 72%); }
+    .daily-phrase::after { content:var(--daily-symbol, "✿"); position:absolute; right:13px; top:5px; color:#d8a6b5; font-size:26px; opacity:.7; }
+    .daily-phrase-symbols { margin:0 0 7px; color:#c98fa2; font-size:15px; letter-spacing:5px; }
+    .daily-phrase-kicker { margin:0 0 5px; color:#a36e82; font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; }
+    .daily-phrase blockquote { margin:0; max-width:650px; color:#704b5a; font-family:Georgia,"Times New Roman",serif; font-size:clamp(18px,4vw,22px); line-height:1.45; }
+    .daily-phrase-date { margin:9px 0 0; color:#967985; font-size:12px; }
+    .season-garden { position:relative; overflow:hidden; margin:0 0 16px; padding:17px 18px; border:1px solid #ead2da; border-radius:18px; background:radial-gradient(ellipse at 100% 0%,rgba(232,190,203,.24),transparent 125px),linear-gradient(135deg,#fffaf0,#fff2f5); }
+    .season-garden::before { content:""; position:absolute; width:92px; height:92px; right:-22px; bottom:-34px; border:1px solid rgba(201,143,162,.22); border-radius:50%; box-shadow:0 0 0 10px rgba(201,143,162,.05),0 0 0 21px rgba(201,143,162,.035); pointer-events:none; }
+    .season-garden-art { margin:0 0 5px; color:#c98fa2; font-size:21px; letter-spacing:5px; }
+    .season-garden h2 { margin:0 0 5px; font-size:19px; }
+    .season-garden p { position:relative; margin:0; max-width:620px; color:#896b77; font-size:13px; line-height:1.6; }
+    .monthly-botanical { margin:12px 0 16px; padding:15px 12px; text-align:center; border:1px solid #ead2da; border-radius:17px; background:radial-gradient(ellipse at 0% 100%,rgba(232,190,203,.18),transparent 110px),linear-gradient(135deg,#fff4f6,#fffaf2); }
+    .monthly-botanical-art { margin:0 0 4px; color:#c98fa2; font-size:23px; letter-spacing:6px; }
+    .monthly-botanical p { margin:0; color:#896b77; font-size:12px; }
+    .monthly-summary .stat { background:linear-gradient(145deg,#fffdf8,#fff7f8); }
+    .calendar-day.empty { background:transparent; }
+    /* Detalles florales suaves: pétalos discretos y acentos rosa empolvado */
+    .calendar-day { position:relative; overflow:visible; border-radius:10px 10px 13px 13px; }
+    .calendar-day:not(.empty)::before { content:"✿"; position:absolute; top:1px; right:3px; font-size:7px; line-height:1; color:#d8a6b5; opacity:.68; pointer-events:none; }
+    .mini-calendar-grid .calendar-day:not(.empty)::before { top:0; right:1px; font-size:5px; opacity:.6; }
+    .calendar-day.today { border-color:#b97c91; font-weight:700; }
+    .calendar-day.today::before { content:"✿"; color:#a85e7a; opacity:1; }
+    .calendar-day.actual { background:#c98fa2; color:white; font-weight:700; }
+    .calendar-day.actual::before { color:#fffaf7; opacity:.9; }
+    .calendar-day.predicted { background:#fff6f8; border:1px dashed #c98fa2; color:#87586a; font-weight:700; }
+    .calendar-day.predicted::before { color:#b8758d; opacity:.9; }
+    .calendar-day.fertile { background:#fbf0f3; color:#87586a; }
+    .calendar-day.fertile::before { color:#c98fa2; }
+    .day-details { margin-top:16px; padding:14px; border:1px solid #ead4da; border-radius:16px; background:#fffaf2; }
+    .day-details h3 { margin:0 0 10px; font-size:16px; }
+    .day-detail-item { padding:10px 0; border-top:1px solid #f0dfe4; }
+    .day-detail-item:first-of-type { border-top:0; padding-top:0; }
+    .day-detail-item strong { display:block; margin-bottom:4px; color:#87586a; font-size:13px; }
+    .day-detail-item p { margin:3px 0; font-size:13px; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .calendar-legend { display:flex; flex-wrap:wrap; gap:8px 14px; margin-top:16px; color:#806875; font-size:12px; }
+    .legend-item { display:inline-flex; align-items:center; gap:6px; }
+    .legend-dot { width:10px; height:10px; border-radius:4px; display:inline-block; background:#c98fa2; }
+    .legend-dot.predicted { background:#fff0f4; border:1px dashed #b97c91; }
+    .legend-dot.fertile { background:#f7e9ef; }
+    .stats { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }
+    .stat { min-width: 0; background: #fffdf8; border: 1px solid #ead9dd; border-radius: 17px; padding: 15px; }
+    .stat strong { display: block; font-family: Georgia, "Times New Roman", serif; font-size: 23px; font-weight: 500; margin: 5px 0; color: #87586a; overflow-wrap: anywhere; }
+    .stat span { color: var(--muted); font-size: 12px; }
+    .circle-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
+    .circle-card { min-width: 0; background: #fffdf8; border: 1px solid #ead9dd; border-radius: 17px; padding: 15px; }
+    .circle-card h3 { margin: 0 0 8px; font-size: 15px; font-weight: 600; }
+    .circle-visual { display: flex; justify-content: center; align-items: center; min-height: 140px; }
+    .donut-svg { width: 142px; height: 142px; max-width: 100%; overflow: visible; }
+    .donut-center { font-size: 17px; font-weight: 600; fill: #87586a; text-anchor: middle; dominant-baseline: middle; }
+    .donut-subtitle { font-size: 9px; fill: #967985; text-anchor: middle; }
+    .circle-legend { display: grid; gap: 7px; margin-top: 10px; }
+    .circle-legend-row { display: grid; grid-template-columns: 9px minmax(0, 1fr) auto; align-items: center; gap: 7px; font-size: 12px; color: var(--text); }
+    .circle-dot { width: 9px; height: 9px; border-radius: 50%; }
+    .circle-legend-row span:last-child { color: var(--muted); white-space: nowrap; }
+    .circle-empty { color: var(--muted); font-size: 12px; text-align: center; max-width: 180px; }
+    .chart { width: 100%; height: 180px; padding: 8px 0 0; overflow: hidden; }
+    .chart svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    .chart-label { font-size: 11px; fill: var(--muted); }
+    .pill { display: inline-block; border: 1px solid var(--border); border-radius: 99px; padding: 3px 9px; font-size: 12px; color: #87586a; background: #fff5f6; margin-bottom: 6px; }
+    .hint { font-size: 13px; color: var(--muted); line-height: 1.65; }
+    footer { text-align: center; color: var(--muted); font-size: 12px; padding: 27px 8px; }
+    @media (max-width: 680px) {
+      body { padding: 18px 12px; }
+      main { max-width: 540px; }
+      #appPanel > .panel { margin-bottom: 14px; }
+      .tabs { gap: 7px; }
+      .tabs button { padding: 9px 12px; font-size: 14px; }
+      .panel { padding: 20px; border-radius: 19px; }
+      .circle-charts { grid-template-columns: 1fr; }
+      .entry { grid-template-columns: 1fr; gap: 5px; }
+      .calendar-day { min-height: 36px; border-radius: 9px; }
+    }
+    @media (max-width: 360px) { .panel { padding: 16px; } #authForm { grid-template-columns: minmax(0,1fr); } #authForm button { grid-column: 1 / -1; } .stats { grid-template-columns: 1fr; } }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; } }
+  
+    /* Refinamiento visual: líneas más finas, superficies suaves y más aire */
+    :root {
+      --border: #efdee2;
+      --soft-rose: #fbf0f3;
+    }
+    .panel {
+      border-width: .75px;
+      box-shadow: 0 7px 22px rgba(111,69,83,.045);
+      border-radius: 21px;
+    }
+    .moon { border-width: .75px; box-shadow: 0 3px 12px rgba(111,69,83,.035); }
+    .tabs { gap: 7px; }
+    .tabs button,
+    button.secondary,
+    .calendar-head button {
+      border-width: .75px;
+    }
+    input, textarea, select {
+      border-width: .75px;
+      background: rgba(255,253,249,.88);
+    }
+    input:focus, textarea:focus, select:focus {
+      box-shadow: 0 0 0 2px rgba(201,143,162,.12);
+    }
+    button { box-shadow: 0 2px 7px rgba(135,88,106,.06); }
+    button:hover { box-shadow: 0 4px 11px rgba(135,88,106,.09); }
+    .entry, .favorite-memory, .mini-calendar, .stat, .circle-card,
+    .monthly-summary, .favorite-album, .day-details {
+      border-width: .75px;
+      box-shadow: none;
+    }
+    .entry { background: rgba(255,253,249,.72); border-radius: 13px; }
+    .favorite-album { background: linear-gradient(145deg,rgba(255,248,250,.82),rgba(255,253,248,.9)); }
+    .favorite-memory { border-color: #f1e3e7; border-radius: 12px; }
+    .favorite-memory-caption { padding: 11px 12px; }
+    .calendar-day { border-width: .75px; }
+    .calendar-day.selected { box-shadow: inset 0 0 0 1px #87586a; }
+    .day-details { background: rgba(255,250,242,.65); }
+    .day-detail-item { border-top-width: .75px; }
+    .diary-tag { border-width: .75px; }
+    .diary-photo { border-width: .75px; }
+    .legend-dot.predicted { border-width: .75px; }
+    @media (max-width: 600px) {
+      body { padding: 18px 11px; }
+      header { padding: 13px 0 20px; }
+      .panel { padding: 17px; border-radius: 18px; }
+      .favorite-album { padding: 13px; }
+      .favorite-album-grid { grid-template-columns: repeat(auto-fill,minmax(125px,1fr)); gap: 9px; }
+      .entry { padding: 12px; gap: 5px 10px; }
+      .stats, .circle-charts { gap: 9px; }
+      .stat, .circle-card { padding: 12px; }
+    }
+
+
+    /* Detalles botánicos suaves: mejoras visuales sin cambiar datos ni funciones */
+    header { position: relative; }
+    header::after {
+      content: "❀  ·  ♡  ·  ✿";
+      display: block;
+      width: fit-content;
+      margin: 13px auto 0;
+      padding: 5px 16px;
+      color: #c98fa2;
+      border-top: 1px solid #efdde2;
+      border-bottom: 1px solid #efdde2;
+      font-family: Georgia, serif;
+      font-size: 14px;
+      letter-spacing: 3px;
+      opacity: .88;
+    }
+    .panel {
+      position: relative;
+      background-image: radial-gradient(circle at 100% 0%, rgba(247,226,233,.28), transparent 145px);
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+    .panel h2 {
+      position: relative;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(239,222,226,.85);
+    }
+    .panel h2::after {
+      content: "✿";
+      position: absolute;
+      right: 0;
+      bottom: 5px;
+      color: #d7a5b5;
+      font-size: 13px;
+      opacity: .85;
+    }
+    .tabs button {
+      border-radius: 17px 17px 13px 13px;
+      position: relative;
+    }
+    .tabs button[aria-selected="true"] {
+      box-shadow: 0 4px 12px rgba(201,143,162,.18);
+    }
+    .entry, .favorite-memory, .monthly-summary, .favorite-album, .mini-calendar, .stat, .circle-card {
+      transition: border-color .18s ease, transform .18s ease;
+    }
+    .entry:hover, .favorite-memory:hover {
+      border-color: #dfbdc8;
+    }
+    .daily-phrase {
+      position: relative;
+      overflow: hidden;
+    }
+    .daily-phrase::before {
+      content: "❀";
+      position: absolute;
+      left: 12px;
+      bottom: 2px;
+      color: #d9a8b7;
+      opacity: .38;
+      font-size: 22px;
+      pointer-events: none;
+    }
+    .calendar-day.selected {
+      outline: 1px solid rgba(201,143,162,.45);
+      outline-offset: 1px;
+    }
+    input, textarea, select {
+      background-image: linear-gradient(135deg, rgba(255,255,255,.45), transparent 55%);
+    }
+    @media (max-width: 600px) {
+      header::after { margin-top: 10px; font-size: 12px; letter-spacing: 2px; }
+      .panel h2 { padding-bottom: 7px; }
+      .daily-phrase::before { font-size: 18px; }
+    }
+  
+    /* Jardín botánico: adornos en los espacios de títulos y marcos, nunca sobre fechas o fotos */
+    .panel[data-tab-panel="calendario"] > h2 {
+      position:relative;
+      padding-bottom:12px;
+    }
+    .panel[data-tab-panel="calendario"] > h2::after {
+      content:"❀  ·  ✿  ·  ❀";
+      display:block;
+      margin-top:5px;
+      color:#c98fa2;
+      font-family:Georgia,serif;
+      font-size:13px;
+      font-weight:400;
+      letter-spacing:4px;
+      text-align:center;
+      opacity:.8;
+    }
+    .panel[data-tab-panel="calendario"] .calendar-head h3::before {
+      content:"✿";
+      display:inline-block;
+      margin-right:9px;
+      color:#d4a0b0;
+      font-size:.72em;
+      vertical-align:middle;
+    }
+    .mini-calendar .mini-calendar-top h2::after {
+      content:"  ❀";
+      color:#c98fa2;
+      font-size:.8em;
+      font-weight:400;
+    }
+    .favorite-album {
+      position:relative;
+      isolation:isolate;
+      background:
+        radial-gradient(ellipse at 100% 0%, rgba(232,190,203,.2), transparent 115px),
+        radial-gradient(ellipse at 0% 100%, rgba(232,190,203,.14), transparent 100px),
+        linear-gradient(145deg,rgba(255,248,250,.96),rgba(255,253,248,.98));
+    }
+    .favorite-album::before,
+    .favorite-album::after {
+      position:absolute;
+      z-index:-1;
+      color:#d4a0b0;
+      font-family:Georgia,serif;
+      font-size:23px;
+      line-height:1;
+      opacity:.48;
+      pointer-events:none;
+    }
+    .favorite-album::before {
+      content:"❀  ✧";
+      top:8px;
+      right:12px;
+      font-size:14px;
+      letter-spacing:3px;
+    }
+    .favorite-album::after {
+      content:"✿";
+      left:8px;
+      bottom:7px;
+      font-size:17px;
+      opacity:.34;
+    }
+    .favorite-album h3::before {
+      content:"✿ ";
+      color:#c98fa2;
+      font-size:.9em;
+    }
+    .favorite-memory {
+      position:relative;
+      box-shadow:0 2px 8px rgba(135,88,106,.035);
+    }
+    .favorite-memory img,
+    .favorite-memory-placeholder {
+      position:relative;
+      z-index:0;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .favorite-memory:hover { transform:translateY(-2px); }
+    }
+
+  
+    /* Detalles otoñales delicados: hojas y corazones */
+    .season-garden::after {
+      content:"♡  🍁";
+      position:absolute;
+      top:12px;
+      right:14px;
+      color:#b77f8e;
+      font-size:17px;
+      letter-spacing:3px;
+      opacity:.78;
+      pointer-events:none;
+    }
+    .monthly-botanical {
+      position:relative;
+      overflow:hidden;
+    }
+    .monthly-botanical::after {
+      content:"🍂  ♡";
+      position:absolute;
+      top:9px;
+      right:12px;
+      color:#b77f8e;
+      font-size:15px;
+      letter-spacing:2px;
+      opacity:.76;
+      pointer-events:none;
+    }
+    .daily-phrase {
+      position:relative;
+      overflow:hidden;
+    }
+    .daily-phrase::after {
+      content:"♡  ✿";
+      position:absolute;
+      right:14px;
+      bottom:10px;
+      color:#c98fa2;
+      font-size:14px;
+      letter-spacing:3px;
+      opacity:.7;
+      pointer-events:none;
+    }
+
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="moon" aria-hidden="true">✿</div>
+    <h1>Mi Ciclo</h1>
+    <p class="subtitle">Un espacio íntimo para escucharte y conocerte.</p>
+  </header>
+
+  <section id="authPanel" class="panel">
+    <h2>Tu espacio privado</h2>
+    <p class="muted">Entra en tu cuenta o crea una nueva para empezar.</p>
+    <form id="authForm">
+      <label for="email">Correo electrónico</label>
+      <input id="email" type="email" autocomplete="email" required>
+      <label for="password">Contraseña</label>
+      <input id="password" type="password" autocomplete="current-password"
+             minlength="8" required>
+      <button id="loginBtn" type="submit">Iniciar sesión</button>
+      <button id="registerBtn" class="secondary" type="button">Crear cuenta</button>
+      <button id="resetBtn" class="secondary" type="button">Recuperar contraseña</button>
+    </form>
+    <p id="authStatus" class="status" role="status"></p>
+  </section>
+
+  <nav id="appTabs" class="tabs hidden" aria-label="Secciones de Mi Ciclo" role="tablist">
+    <button type="button" role="tab" data-tab="resumen" aria-selected="true">Resumen</button>
+    <button type="button" role="tab" data-tab="calendario" aria-selected="false">Calendario</button>
+    <button type="button" role="tab" data-tab="ciclo" aria-selected="false">Mi ciclo</button>
+    <button type="button" role="tab" data-tab="diario" aria-selected="false">Diario</button>
+    <button type="button" role="tab" data-tab="autocuidado" aria-selected="false">✿ Autocuidado</button>
+    <button type="button" role="tab" data-tab="relaciones" aria-selected="false">Relaciones</button>
+    <button type="button" role="tab" data-tab="historial" aria-selected="false">Historial</button>
+  </nav>
+
+  <section id="appPanel" class="hidden">
+    <div class="panel hidden" data-tab-panel="calendario">
+      <h2>Tu calendario</h2>
+      <p class="hint">Consulta tus fechas registradas y las estimaciones orientativas de tu ciclo.</p>
+      <div class="calendar-head">
+        <button type="button" class="secondary" id="prevMonth" aria-label="Mes anterior">‹</button>
+        <h3 id="calendarTitle">Mes y año</h3>
+        <button type="button" class="secondary" id="nextMonth" aria-label="Mes siguiente">›</button>
+      </div>
+      <div class="calendar-grid" id="calendarGrid" aria-label="Calendario mensual"></div>
+      <div class="calendar-legend">
+        <span class="legend-item"><i class="legend-dot"></i> Menstruación registrada</span>
+        <span class="legend-item"><i class="legend-dot" style="background:#b97c91"></i> Síntomas o estado de ánimo</span>
+        <span class="legend-item"><i class="legend-dot" style="background:#9c8ab8"></i> Página del diario</span>
+        <span class="legend-item"><i class="legend-dot" style="background:#d4a45f"></i> Relación registrada</span>
+        <span class="legend-item"><i class="legend-dot predicted"></i> Próxima fecha estimada</span>
+        <span class="legend-item"><i class="legend-dot fertile"></i> Ventana fértil estimada</span>
+      </div>
+      <section id="calendarDayDetails" class="day-details" aria-live="polite">
+        <h3 id="calendarDetailsTitle">Tus anotaciones</h3>
+        <p class="hint">Toca un día del calendario para consultar lo que guardaste en esa fecha.</p>
+      </section>
+      <p class="hint">Las fechas estimadas son orientativas y no sirven para evitar un embarazo.</p>
+    </div>
+    <div class="panel hidden" data-tab-panel="ciclo">
+      <h2>Registrar menstruación</h2>
+      <p class="muted">Anota el primer día de tu menstruación y, si quieres, cómo te encuentras.</p>
+      <form id="cycleForm">
+        <label for="periodDate">Primer día de la menstruación</label>
+        <input id="periodDate" type="date" required>
+        <label for="mood">¿Cómo te has sentido? (opcional)</label>
+        <select id="mood">
+          <option value="">Prefiero no indicarlo</option>
+          <option value="Muy bien">😊 Muy bien</option>
+          <option value="Tranquila">🌷 Tranquila</option>
+          <option value="Sensible">💗 Sensible</option>
+          <option value="Irritable">🌦️ Irritable</option>
+          <option value="Ansiosa">🫧 Ansiosa</option>
+          <option value="Cansada">🌙 Cansada</option>
+          <option value="Triste">🌧️ Triste</option>
+        </select>
+        <label for="symptoms">Síntomas, molestias o nota personal (opcional)</label>
+        <textarea id="symptoms" maxlength="2000"
+          placeholder="Puedes anotar síntomas, energía o escribir unas líneas en tu diario…"></textarea>
+        <button id="saveBtn" type="submit">Guardar registro</button>
+      </form>
+      <p id="saveStatus" class="status" role="status"></p>
+    </div>
+    <div class="panel" data-tab-panel="resumen">
+      <section class="season-garden" id="seasonGarden" aria-live="polite">
+        <div class="season-garden-art" id="seasonGardenArt" aria-hidden="true">✿ ❀ 🦋 ❀ ✿</div>
+        <h2 id="seasonGardenTitle">Tu jardín de temporada</h2>
+        <p id="seasonGardenMessage">Cada estación tiene su forma de florecer. Tú también puedes ir a tu ritmo.</p>
+      </section>
+      <section class="daily-phrase" aria-labelledby="dailyPhraseHeading">
+        <p class="daily-phrase-kicker" id="dailyPhraseHeading">✿ Un pensamiento para hoy</p>
+        <p class="daily-phrase-symbols" id="dailyPhraseSymbols" aria-hidden="true">✿ ♡ ☾</p>
+        <blockquote id="dailyPhraseText">No tienes que poder con todo; también mereces cuidado.</blockquote>
+        <p class="daily-phrase-date" id="dailyPhraseDate"></p>
+      </section>
+      <div class="mini-calendar">
+        <div class="mini-calendar-top">
+          <h2>Tu mes en un vistazo</h2>
+          <button type="button" class="secondary" id="openFullCalendar">Ver calendario</button>
+        </div>
+        <div class="calendar-head" style="margin:4px 0 10px">
+          <h3 id="miniCalendarTitle">Mes y año</h3>
+        </div>
+        <div class="calendar-grid mini-calendar-grid" id="miniCalendarGrid" aria-label="Calendario mensual resumido"></div>
+        <p class="hint" style="margin:10px 0 0">Rosa: menstruación registrada · Rosa claro: días fértiles estimados</p>
+      </div>
+      <h2>Resumen de tu ciclo</h2>
+      <div class="stats">
+        <div class="stat"><span>Duración media</span><strong id="avgCycle">—</strong><span>días por ciclo</span></div>
+        <div class="stat"><span>Próxima menstruación</span><strong id="nextPeriod">—</strong><span id="predictionNote">Se calculará con tus registros</span></div>
+      </div>
+      <p id="fertileEstimate" class="hint">La estimación de ovulación necesita varios ciclos registrados.</p>
+    </div>
+    <div class="panel" data-tab-panel="resumen">
+      <h2>Gráfico de tus ciclos</h2>
+      <p class="hint">Duración aproximada entre los primeros días de menstruaciones registradas.</p>
+      <div id="cycleChart" class="chart" aria-label="Gráfico de duración de los ciclos"></div>
+      <p id="chartNote" class="hint">Registra al menos dos menstruaciones para ver el gráfico.</p>
+    </div>
+    <div class="panel hidden" data-tab-panel="diario">
+      <h2>Mi diario personal</h2>
+      <p class="muted">Un espacio solo para ti. Escribe lo que te apetezca recordar, sin necesidad de registrar tu ciclo.</p>
+      <form id="diaryForm">
+        <label for="diaryDate">Fecha</label>
+        <input id="diaryDate" type="date" required>
+        <label for="diaryTitle">Título (opcional)</label>
+        <input id="diaryTitle" type="text" maxlength="100" placeholder="Un día para recordar…">
+        <label for="diaryMood">¿Cómo me siento? (opcional)</label>
+        <select id="diaryMood">
+          <option value="">Prefiero no indicarlo</option>
+          <option value="Feliz">😊 Feliz</option>
+          <option value="Tranquila">🌷 Tranquila</option>
+          <option value="Agradecida">💗 Agradecida</option>
+          <option value="Sensible">🌸 Sensible</option>
+          <option value="Estresada">🫧 Estresada</option>
+          <option value="Cansada">🌙 Cansada</option>
+          <option value="Triste">🌧️ Triste</option>
+          <option value="Enfadada">🌦️ Enfadada</option>
+          <option value="Confundida">☁️ Confundida</option>
+        </select>
+        <label for="diaryTags">Etiquetas (opcional, separadas por comas)</label>
+        <input id="diaryTags" type="text" maxlength="240" placeholder="Ej.: autocuidado, trabajo, algo bonito">
+        <p class="hint">Puedes añadir palabras para encontrar después tus páginas más fácilmente.</p>
+        <label for="diaryPhotos">Añadir fotos (opcional, hasta 3)</label>
+        <input id="diaryPhotos" type="file" accept="image/*" multiple>
+        <p class="hint">Las fotos se reducen para ocupar menos espacio y se guardan en tu registro privado.</p>
+        <div id="diaryPhotoPreview" class="diary-photo-grid" aria-live="polite"></div>
+        <label for="diaryText">Lo que quiero contarme</label>
+        <textarea id="diaryText" maxlength="8000" rows="6" required placeholder="Escribe aquí tus pensamientos, emociones, recuerdos o cualquier cosa que necesites sacar…"></textarea>
+        <button id="diarySaveBtn" type="submit">Guardar en mi diario</button>
+        <button id="diaryCancelEditBtn" class="secondary hidden" type="button">Cancelar edición</button>
+      </form>
+      <p id="diaryStatus" class="status" role="status"></p>
+      <section class="favorite-album" aria-labelledby="favoriteAlbumTitle">
+        <h3 id="favoriteAlbumTitle">♡ Mi álbum de recuerdos</h3>
+        <p class="hint" style="margin:0">Tus páginas favoritas, con sus fotos y fechas, reunidas en un rincón especial.</p>
+        <div id="favoriteAlbumGrid" class="favorite-album-grid">
+          <p class="muted">Tus recuerdos favoritos aparecerán aquí.</p>
+        </div>
+      </section>
+      <h2 style="margin-top:28px">Mis páginas</h2>
+      <p class="hint">Tus anotaciones más recientes aparecerán aquí. Puedes editar, borrar, buscar por palabras o filtrar por etiquetas.</p>
+      <label for="diarySearch">Buscar en mi diario</label>
+      <input id="diarySearch" type="search" placeholder="Buscar en títulos, textos, estados de ánimo o etiquetas…">
+      <p id="diarySearchStatus" class="hint" aria-live="polite"></p>
+      <label for="favoritesOnly">Mostrar solo recuerdos favoritos</label>
+      <input id="favoritesOnly" type="checkbox" style="width:auto; accent-color:#c98fa2">
+      <div id="diaryEntries"><p class="muted">Cargando tu diario…</p></div>
+    </div>
+    <div class="panel hidden" data-tab-panel="autocuidado">
+      <h2>✿ Mi espacio de autocuidado</h2>
+      <p class="muted">Un rincón amable para escucharte. No hace falta hacerlo todo: elige lo que necesitas hoy, a tu ritmo.</p>
+      <form id="selfCareForm">
+        <label for="selfCareDate">Fecha</label>
+        <input id="selfCareDate" type="date" required>
+        <label for="selfCareFeeling">¿Cómo me siento hoy?</label>
+        <select id="selfCareFeeling">
+          <option value="">Prefiero no indicarlo</option>
+          <option value="En calma">🌿 En calma</option>
+          <option value="Necesito descansar">🌙 Necesito descansar</option>
+          <option value="Sensible">🌸 Sensible</option>
+          <option value="Con energía">☀️ Con energía</option>
+          <option value="Con estrés">🫧 Con estrés</option>
+          <option value="Triste">🌧️ Triste</option>
+          <option value="Agradecida">💗 Agradecida</option>
+          <option value="No lo tengo claro">☁️ No lo tengo claro</option>
+        </select>
+        <label>¿Qué necesito hoy? Puedes elegir varias opciones.</label>
+        <div class="self-care-checks">
+          <label><input type="checkbox" name="selfCareNeed" value="Descanso"> 🌙 Descanso</label>
+          <label><input type="checkbox" name="selfCareNeed" value="Beber agua"> 💧 Beber agua</label>
+          <label><input type="checkbox" name="selfCareNeed" value="Un paseo"> 🌿 Un paseo</label>
+          <label><input type="checkbox" name="selfCareNeed" value="Tiempo para mí"> 🕯️ Tiempo para mí</label>
+          <label><input type="checkbox" name="selfCareNeed" value="Hablar con alguien"> 💗 Hablar con alguien</label>
+          <label><input type="checkbox" name="selfCareNeed" value="Movimiento suave"> 🌷 Movimiento suave</label>
+          <label><input type="checkbox" name="selfCareNeed" value="Comer algo nutritivo"> 🍓 Comer algo nutritivo</label>
+          <label><input type="checkbox" name="selfCareNeed" value="Desconectar"> ☁️ Desconectar</label>
+        </div>
+        <label for="selfCareRitual">Mi pequeño gesto de cuidado (opcional)</label>
+        <select id="selfCareRitual">
+          <option value="">Aún no lo he elegido</option>
+          <option value="Prepararme una bebida caliente">☕ Prepararme una bebida caliente</option>
+          <option value="Leer unas páginas">📖 Leer unas páginas</option>
+          <option value="Escuchar música">🎵 Escuchar música</option>
+          <option value="Darme una ducha tranquila">🛁 Darme una ducha tranquila</option>
+          <option value="Estirar suavemente">🌿 Estirar suavemente</option>
+          <option value="Escribir unas líneas">✍️ Escribir unas líneas</option>
+          <option value="Acostarme un poco antes">🌙 Acostarme un poco antes</option>
+          <option value="Otro gesto personal">♡ Otro gesto personal</option>
+        </select>
+        <label for="selfCareNote">Una nota para mí (opcional)</label>
+        <textarea id="selfCareNote" maxlength="1000" rows="3" placeholder="¿Qué te gustaría recordarte hoy? Puedes escribirte con cariño…"></textarea>
+        <button id="selfCareSaveBtn" type="submit">Guardar mi momento de cuidado</button>
+      </form>
+      <p id="selfCareStatus" class="status" role="status"></p>
+      <h2 style="margin-top:26px">Mis momentos de cuidado</h2>
+      <p class="hint">Tus anotaciones se guardan en tu espacio privado y aparecen aquí por fecha.</p>
+      <div id="selfCareEntries"><p class="muted">Cargando tus momentos de cuidado…</p></div>
+    </div>
+    <div class="panel hidden" data-tab-panel="relaciones">
+      <h2>Registrar relación sexual</h2>
+      <p class="muted">Este apartado es opcional y privado en tu cuenta.</p>
+      <form id="sexForm">
+        <label for="sexDate">Fecha</label>
+        <input id="sexDate" type="date" required>
+        <label for="protection">Protección utilizada</label>
+        <select id="protection">
+          <option value="No indicado">Prefiero no indicarlo</option>
+          <option value="Preservativo">Preservativo</option>
+          <option value="Otro método">Otro método</option>
+          <option value="Sin protección">Sin protección</option>
+          <option value="No lo recuerdo">No lo recuerdo</option>
+        </select>
+        <label for="contraception">Método anticonceptivo (opcional)</label>
+        <input id="contraception" type="text" maxlength="120" placeholder="Por ejemplo, píldora, DIU…">
+        <label for="ejaculation">¿Hubo eyaculación dentro de la vagina?</label>
+        <select id="ejaculation">
+          <option value="No indicado">Prefiero no indicarlo</option>
+          <option value="Sí">Sí</option>
+          <option value="No">No</option>
+          <option value="No lo sé">No lo sé</option>
+        </select>
+        <label for="incident">Incidencias (opcional)</label>
+        <select id="incident">
+          <option value="Ninguna indicada">Ninguna indicada</option>
+          <option value="Rotura o deslizamiento del preservativo">Rotura o deslizamiento del preservativo</option>
+          <option value="Posible fallo anticonceptivo">Posible fallo anticonceptivo</option>
+          <option value="Otra incidencia">Otra incidencia</option>
+        </select>
+        <label for="sexNotes">Notas personales (opcional)</label>
+        <textarea id="sexNotes" maxlength="1500" placeholder="Notas que quieras recordar…"></textarea>
+        <button id="sexSaveBtn" type="submit">Guardar relación</button>
+      </form>
+      <p id="sexStatus" class="status" role="status"></p>
+      <p class="hint">Si hubo una posible incidencia anticonceptiva y te preocupa un embarazo, las predicciones no pueden descartarlo. Consulta cuanto antes con un profesional sanitario o una farmacia para conocer las opciones según el tiempo transcurrido.</p>
+    </div>
+    <div class="panel hidden" data-tab-panel="relaciones">
+      <h2>Mis relaciones registradas</h2>
+      <div id="sexEntries"><p class="muted">Cargando…</p></div>
+    </div>
+    <div class="panel" data-tab-panel="resumen">
+      <h2>Últimos registros</h2>
+      <p class="hint">Tus anotaciones más recientes, para tenerlas a mano al entrar.</p>
+      <div id="recentEntries"><p class="muted">Cargando tus registros…</p></div>
+    </div>
+    <div class="panel hidden" data-tab-panel="historial">
+      <h2>Mis registros menstruales</h2>
+      <div id="entries"><p class="muted">Cargando tus registros…</p></div>
+    </div>
+    <div class="panel hidden" data-tab-panel="historial">
+      <h2>Mis estadísticas personales</h2>
+      <p class="hint">Un resumen de tus propios registros, sin diagnósticos ni predicciones médicas. Se actualiza cuando guardas una menstruación.</p>
+      <div class="stats">
+        <div class="stat"><span>Menstruaciones registradas</span><strong id="personalPeriodCount">—</strong><span>registros con fecha</span></div>
+        <div class="stat"><span>Duración media de ciclo</span><strong id="personalCycleAverage">—</strong><span>entre fechas registradas</span></div>
+        <div class="stat"><span>Variación observada</span><strong id="personalCycleRange">—</strong><span>ciclo más corto y más largo</span></div>
+        <div class="stat"><span>Ánimo más anotado</span><strong id="personalMood">—</strong><span id="personalMoodCount">Aún sin suficientes notas</span></div>
+      </div>
+      <div class="circle-charts">
+        <div class="circle-card">
+          <h3>Estado de ánimo</h3>
+          <div id="moodDonut" class="circle-visual"></div>
+          <div id="moodLegend" class="circle-legend"></div>
+        </div>
+        <div class="circle-card">
+          <h3>Síntomas mencionados</h3>
+          <div id="symptomDonut" class="circle-visual"></div>
+          <div id="symptomLegend" class="circle-legend"></div>
+        </div>
+      </div>
+      <h3 style="margin-top:20px">Síntomas mencionados en tus notas</h3>
+      <p id="personalSymptoms" class="muted">Cuando anotes síntomas, aquí aparecerán las palabras que más se repiten.</p>
+      <p class="hint">Este resumen solo analiza las notas que tú has escrito; no interpreta síntomas ni sustituye la orientación de un profesional sanitario.</p>
+    </div>
+    <div class="panel hidden" data-tab-panel="historial">
+      <h2>Mi resumen mensual ilustrado</h2>
+      <div class="monthly-botanical">
+        <div class="monthly-botanical-art" id="monthlyGardenArt" aria-hidden="true">✿ ❀ ☾ ❀ ✿</div>
+        <p id="monthlyGardenCaption">Un pequeño jardín de recuerdos de tu mes.</p>
+      </div>
+      <p class="hint">Elige un mes para revisar lo que has anotado en tu ciclo, en tu diario y en tus momentos de cuidado. Solo resume tus registros; no hace predicciones médicas.</p>
+      <label for="summaryMonth">Mes que quiero consultar</label>
+      <input id="summaryMonth" type="month">
+      <div class="stats" style="margin-top:14px">
+        <div class="stat"><span>Menstruaciones anotadas</span><strong id="monthlyPeriodCount">0</strong><span>primeros días registrados</span></div>
+        <div class="stat"><span>Páginas del diario</span><strong id="monthlyDiaryCount">0</strong><span>recuerdos escritos</span></div>
+        <div class="stat"><span>Estado de ánimo más anotado</span><strong id="monthlyTopMood">—</strong><span id="monthlyMoodCount">Sin registros este mes</span></div>
+        <div class="stat"><span>Etiquetas más usadas</span><strong id="monthlyTopTags">—</strong><span id="monthlyTagCount">Sin etiquetas este mes</span></div>
+        <div class="stat"><span>Momentos de autocuidado</span><strong id="monthlySelfCareCount">0</strong><span>gestos anotados este mes</span></div>
+      </div>
+      <div class="circle-charts">
+        <div class="circle-card"><h3>Ánimo del mes</h3><div id="monthlyMoodDonut" class="circle-visual"></div><div id="monthlyMoodLegend" class="circle-legend"></div></div>
+        <div class="circle-card"><h3>Síntomas mencionados</h3><div id="monthlySymptomDonut" class="circle-visual"></div><div id="monthlySymptomLegend" class="circle-legend"></div></div>
+      </div>
+      <p id="monthlySummaryNote" class="hint" style="margin-top:12px">Cuando haya registros, aquí aparecerá tu resumen mensual.</p>
+    </div>
+    <div class="panel hidden" data-tab-panel="historial">
+      <h2>Mis datos y privacidad</h2>
+      <p id="accountInfo" class="muted"></p>
+      <p class="hint">Puedes guardar una copia de tus registros en tu dispositivo. El archivo incluirá información íntima: guárdalo en un lugar seguro.</p>
+      <button id="exportBtn" class="secondary" type="button">Descargar copia de mis registros</button>
+      <p id="exportStatus" class="status" role="status"></p>
+      <button id="logoutBtn" class="secondary" type="button">Cerrar sesión</button>
+    </div>
+  </section>
+
+  <footer>
+    Tus datos son íntimos. Las estimaciones del ciclo no sirven como método anticonceptivo.
+  </footer>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAjQ49N1t3nJtAlviSM_48VY596zHlrtu0",
+    authDomain: "mi-ciclo-9f22a.firebaseapp.com",
+    databaseURL: "https://mi-ciclo-9f22a-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "mi-ciclo-9f22a",
+    storageBucket: "mi-ciclo-9f22a.firebasestorage.app",
+    messagingSenderId: "619985665447",
+    appId: "1:619985665447:web:ca842e03b239fbd84e8a82"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
+
+  const authPanel = document.getElementById("authPanel");
+  const appPanel = document.getElementById("appPanel");
+  const authStatus = document.getElementById("authStatus");
+  const saveStatus = document.getElementById("saveStatus");
+  const entries = document.getElementById("entries");
+  const sexEntries = document.getElementById("sexEntries");
+  const recentEntries = document.getElementById("recentEntries");
+  const sexStatus = document.getElementById("sexStatus");
+  const diaryEntries = document.getElementById("diaryEntries");
+  const diaryStatus = document.getElementById("diaryStatus");
+  let editingDiaryId = null;
+  let editingDiaryCreatedAt = null;
+  let editingDiaryPhotos = [];
+  const diaryPhotoInput = document.getElementById("diaryPhotos");
+  const diaryPhotoPreview = document.getElementById("diaryPhotoPreview");
+  function renderDiaryPhotoPreview(photos) {
+    diaryPhotoPreview.textContent = "";
+    (photos || []).forEach((photo, index) => {
+      if (!photo || typeof photo !== "string" || !photo.startsWith("data:image/")) return;
+      const wrap = document.createElement("div"); wrap.className = "diary-photo-wrap";
+      const img = document.createElement("img"); img.className = "diary-photo"; img.src = photo; img.alt = "Foto del recuerdo " + (index + 1);
+      const remove = document.createElement("button"); remove.type = "button"; remove.className = "secondary"; remove.textContent = "Quitar foto";
+      remove.addEventListener("click", () => { editingDiaryPhotos.splice(index, 1); renderDiaryPhotoPreview(editingDiaryPhotos); });
+      wrap.append(img, remove); diaryPhotoPreview.appendChild(wrap);
+    });
+  }
+  function readCompressedPhoto(file) {
+    return new Promise((resolve, reject) => {
+      if (!file || !file.type.startsWith("image/")) return reject(new Error("Elige un archivo de imagen."));
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("No se ha podido leer una de las fotos."));
+      reader.onload = () => {
+        const image = new Image();
+        image.onerror = () => reject(new Error("Una de las fotos no se ha podido abrir."));
+        image.onload = () => {
+          const scale = Math.min(1, 900 / Math.max(image.width, image.height));
+          const canvas = document.createElement("canvas"); canvas.width = Math.max(1, Math.round(image.width * scale)); canvas.height = Math.max(1, Math.round(image.height * scale));
+          const context = canvas.getContext("2d");
+          if (!context) return reject(new Error("No se ha podido preparar la foto."));
+          context.fillStyle = "#fffaf2"; context.fillRect(0, 0, canvas.width, canvas.height); context.drawImage(image, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL("image/jpeg", 0.68));
+        };
+        image.src = String(reader.result);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  diaryPhotoInput.addEventListener("change", async () => {
+    const files = [...(diaryPhotoInput.files || [])];
+    if (files.length + editingDiaryPhotos.length > 3) { diaryStatus.textContent = "Puedes conservar hasta 3 fotos por página."; diaryPhotoInput.value = ""; return; }
+    try {
+      const newPhotos = await Promise.all(files.map(readCompressedPhoto));
+      editingDiaryPhotos = [...editingDiaryPhotos, ...newPhotos].slice(0, 3); renderDiaryPhotoPreview(editingDiaryPhotos);
+      diaryStatus.textContent = editingDiaryPhotos.length + " foto(s) preparadas para este recuerdo.";
+    } catch (error) { diaryStatus.textContent = error.message || "No se ha podido preparar la foto."; }
+    diaryPhotoInput.value = "";
+  });
+  const diarySaveButton = document.getElementById("diarySaveBtn");
+  const diaryCancelEditButton = document.getElementById("diaryCancelEditBtn");
+  function cancelDiaryEdit() {
+    editingDiaryId = null;
+    editingDiaryCreatedAt = null;
+    editingDiaryPhotos = [];
+    renderDiaryPhotoPreview(editingDiaryPhotos);
+    document.getElementById("diaryForm").reset();
+    diarySaveButton.textContent = "Guardar en mi diario";
+    diaryCancelEditButton.classList.add("hidden");
+    const today = new Date();
+    document.getElementById("diaryDate").value = today.getFullYear() + "-" + String(today.getMonth() + 1).padStart(2, "0") + "-" + String(today.getDate()).padStart(2, "0");
+  }
+  diaryCancelEditButton.addEventListener("click", cancelDiaryEdit);
+  const authForm = document.getElementById("authForm");
+  const appTabs = document.getElementById("appTabs");
+  let calendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  let calendarRecords = [];
+  let loadedCycleRecords = [];
+  let loadedSexRecords = [];
+  let loadedDiaryRecords = [];
+  let loadedSelfCareRecords = [];
+  let selectedCalendarDate = "";
+  document.getElementById("prevMonth").addEventListener("click", () => { calendarMonth.setMonth(calendarMonth.getMonth() - 1); renderCalendar(); });
+  document.getElementById("nextMonth").addEventListener("click", () => { calendarMonth.setMonth(calendarMonth.getMonth() + 1); renderCalendar(); });
+  document.getElementById("calendarGrid").addEventListener("click", event => {
+    const day = event.target.closest("button[data-date]");
+    if (day) showCalendarDay(day.dataset.date);
+  });
+  document.getElementById("miniCalendarGrid").addEventListener("click", event => {
+    const day = event.target.closest("button[data-date]");
+    if (day) {
+      selectTab("calendario");
+      showCalendarDay(day.dataset.date);
+    }
+  });
+
+  function selectTab(name) {
+    appTabs.querySelectorAll("[data-tab]").forEach(button => {
+      const selected = button.dataset.tab === name;
+      button.setAttribute("aria-selected", String(selected));
+      button.tabIndex = selected ? 0 : -1;
+    });
+    appPanel.querySelectorAll("[data-tab-panel]").forEach(panel => {
+      panel.classList.toggle("hidden", panel.dataset.tabPanel !== name);
+    });
+  }
+  appTabs.querySelectorAll("[data-tab]").forEach(button => {
+    button.addEventListener("click", () => selectTab(button.dataset.tab));
+  });
+  document.getElementById("openFullCalendar").addEventListener("click", () => selectTab("calendario"));
+  selectTab("calendario");
+
+  function showAuthMessage(message) {
+    authStatus.textContent = message;
+  }
+
+  function friendlyError(error) {
+    const messages = {
+      "auth/email-already-in-use": "Ese correo ya tiene una cuenta. Prueba a iniciar sesión.",
+      "auth/invalid-email": "Comprueba el formato del correo electrónico.",
+      "auth/weak-password": "Elige una contraseña más segura, de al menos 8 caracteres.",
+      "auth/invalid-credential": "No se ha podido iniciar sesión. Comprueba el correo y la contraseña.",
+      "auth/too-many-requests": "Hay demasiados intentos. Espera un poco y vuelve a probar.",
+      "auth/network-request-failed": "No hay conexión. Comprueba tu internet e inténtalo de nuevo."
+    };
+    return messages[error.code] || "No se ha podido completar la operación. Código: " + error.code;
+  }
+
+  authForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const button = document.getElementById("loginBtn");
+    button.disabled = true;
+    showAuthMessage("Comprobando tu cuenta…");
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+    } catch (error) {
+      showAuthMessage(friendlyError(error));
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  document.getElementById("registerBtn").addEventListener("click", async () => {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    if (!email || password.length < 8) {
+      showAuthMessage("Introduce tu correo y una contraseña de al menos 8 caracteres.");
+      return;
+    }
+    try {
+      showAuthMessage("Creando tu cuenta…");
+      const credential = await auth.createUserWithEmailAndPassword(email, password);
+      await credential.user.sendEmailVerification();
+      showAuthMessage("Cuenta creada. Revisa tu correo para verificar la dirección.");
+    } catch (error) {
+      showAuthMessage(friendlyError(error));
+    }
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", async () => {
+    const email = document.getElementById("email").value.trim();
+    if (!email) {
+      showAuthMessage("Escribe primero tu correo electrónico.");
+      return;
+    }
+    try {
+      await auth.sendPasswordResetEmail(email);
+      showAuthMessage("Si la cuenta existe, recibirás instrucciones para restablecer la contraseña.");
+    } catch (error) {
+      showAuthMessage(friendlyError(error));
+    }
+  });
+
+
+  document.getElementById("exportBtn").addEventListener("click", async () => {
+    const user = auth.currentUser;
+    const status = document.getElementById("exportStatus");
+    if (!user) { status.textContent = "Inicia sesión para exportar tus registros."; return; }
+    const button = document.getElementById("exportBtn");
+    button.disabled = true;
+    status.textContent = "Preparando tu copia…";
+    try {
+      const [cycleSnapshot, sexSnapshot, diarySnapshot] = await Promise.all([
+        db.ref("users/" + user.uid + "/cycleEntries").once("value"),
+        db.ref("users/" + user.uid + "/sexualEntries").once("value"),
+        db.ref("users/" + user.uid + "/diaryEntries").once("value").catch(() => null)
+      ]);
+      const cycles = Object.entries(cycleSnapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
+      const relationships = Object.entries(sexSnapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
+      const diary = Object.entries((diarySnapshot && diarySnapshot.val()) || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
+      const backup = {
+        app: "Mi Ciclo",
+        exportedAt: new Date().toISOString(),
+        note: "Copia privada de tus registros. Guárdala en un lugar seguro.",
+        menstrualRecords: cycles,
+        relationshipRecords: relationships,
+        diaryEntries: diary
+      };
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "mi-ciclo-copia-" + new Date().toISOString().slice(0,10) + ".json";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      status.textContent = "Copia preparada. Comprueba que se ha descargado en tu dispositivo.";
+    } catch (error) {
+      status.textContent = "No se pudo preparar la copia. Código: " + (error.code || "error");
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  document.getElementById("diaryForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const user = auth.currentUser;
+    if (!user) return;
+    const record = {
+      date: document.getElementById("diaryDate").value,
+      title: document.getElementById("diaryTitle").value.trim(),
+      mood: document.getElementById("diaryMood").value,
+      text: document.getElementById("diaryText").value.trim(),
+      tags: [...new Set(document.getElementById("diaryTags").value.split(",").map(tag => tag.trim()).filter(Boolean).map(tag => tag.slice(0, 40)))].slice(0, 8),
+      favorite: false,
+      photos: editingDiaryPhotos.slice(0, 3),
+      createdAt: firebase.database.ServerValue.TIMESTAMP
+    };
+    if (!record.date || !record.text) {
+      diaryStatus.textContent = "Añade una fecha y algo de texto para guardar la página.";
+      return;
+    }
+    const button = document.getElementById("diarySaveBtn");
+    button.disabled = true;
+    diaryStatus.textContent = "Guardando tu página…";
+    try {
+      if (editingDiaryId) {
+        const existing = loadedDiaryRecords.find(item => item.id === editingDiaryId);
+        record.createdAt = editingDiaryCreatedAt;
+        record.favorite = existing ? !!existing.favorite : false;
+        await db.ref("users/" + user.uid + "/diaryEntries/" + editingDiaryId).set(record);
+        diaryStatus.textContent = "Tu página se ha actualizado. 💗";
+        cancelDiaryEdit();
+      } else {
+        await db.ref("users/" + user.uid + "/diaryEntries").push(record);
+        diaryStatus.textContent = "Tu página se ha guardado en tu diario. 💗";
+        document.getElementById("diaryTitle").value = "";
+        document.getElementById("diaryMood").value = "";
+        document.getElementById("diaryTags").value = "";
+        document.getElementById("diaryText").value = "";
+        editingDiaryPhotos = []; renderDiaryPhotoPreview(editingDiaryPhotos); diaryPhotoInput.value = "";
+      }
+      await loadDiaryEntries(user.uid);
+    } catch (error) {
+      diaryStatus.textContent = "No se ha podido guardar. Puede que las reglas privadas de Firebase aún no permitan el diario. Código: " + (error.code || "error");
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  function renderFavoriteAlbum(records) {
+    const grid = document.getElementById("favoriteAlbumGrid");
+    if (!grid) return;
+    grid.textContent = "";
+    const favorites = (records || []).filter(record => !!record.favorite);
+    if (!favorites.length) {
+      const empty = document.createElement("p");
+      empty.className = "muted";
+      empty.textContent = "Todavía no has marcado recuerdos favoritos. Pulsa «Añadir a favoritos» en cualquier página para guardarla aquí. ♡";
+      grid.appendChild(empty);
+      return;
+    }
+    favorites.forEach(record => {
+      const card = document.createElement("article");
+      card.className = "favorite-memory";
+      const photo = Array.isArray(record.photos)
+        ? record.photos.find(value => typeof value === "string" && value.startsWith("data:image/"))
+        : null;
+      if (photo) {
+        const image = document.createElement("img");
+        image.src = photo;
+        image.alt = "Foto de " + (record.title || "un recuerdo favorito");
+        image.loading = "lazy";
+        card.appendChild(image);
+      } else {
+        const placeholder = document.createElement("div");
+        placeholder.className = "favorite-memory-placeholder";
+        placeholder.setAttribute("aria-hidden", "true");
+        placeholder.textContent = "♡";
+        card.appendChild(placeholder);
+      }
+      const caption = document.createElement("div");
+      caption.className = "favorite-memory-caption";
+      const title = document.createElement("strong");
+      title.textContent = record.title || "Un recuerdo especial";
+      caption.appendChild(title);
+      const date = document.createElement("p");
+      date.textContent = formatDate(record.date);
+      caption.appendChild(date);
+      const excerpt = document.createElement("p");
+      const plainText = String(record.text || "").replace(/\s+/g, " ").trim();
+      excerpt.textContent = plainText.length > 95 ? plainText.slice(0, 92) + "…" : (plainText || "Una página que has guardado con cariño.");
+      caption.appendChild(excerpt);
+      card.appendChild(caption);
+      grid.appendChild(card);
+    });
+  }
+
+  const selfCareForm = document.getElementById("selfCareForm");
+  const selfCareStatus = document.getElementById("selfCareStatus");
+  const selfCareEntries = document.getElementById("selfCareEntries");
+  const selfCareDateInput = document.getElementById("selfCareDate");
+  const selfCareToday = new Date();
+  selfCareDateInput.value = selfCareToday.getFullYear() + "-" + String(selfCareToday.getMonth() + 1).padStart(2, "0") + "-" + String(selfCareToday.getDate()).padStart(2, "0");
+
+  selfCareForm.addEventListener("submit", async event => {
+    event.preventDefault();
+    const user = auth.currentUser;
+    if (!user) { selfCareStatus.textContent = "Inicia sesión para guardar tu espacio de autocuidado."; return; }
+    const button = document.getElementById("selfCareSaveBtn");
+    const needs = Array.from(selfCareForm.querySelectorAll('input[name="selfCareNeed"]:checked')).map(input => input.value);
+    const record = {
+      date: selfCareDateInput.value,
+      feeling: document.getElementById("selfCareFeeling").value,
+      needs: needs.join(", "),
+      ritual: document.getElementById("selfCareRitual").value,
+      note: document.getElementById("selfCareNote").value.trim(),
+      createdAt: firebase.database.ServerValue.TIMESTAMP
+    };
+    if (!record.date) { selfCareStatus.textContent = "Elige la fecha de este momento de cuidado."; return; }
+    button.disabled = true;
+    selfCareStatus.textContent = "Guardando tu momento de cuidado…";
+    try {
+      await db.ref("users/" + user.uid + "/selfCareEntries").push(record);
+      selfCareStatus.textContent = "Tu momento de cuidado se ha guardado. Trátate con cariño. 💗";
+      document.getElementById("selfCareFeeling").value = "";
+      document.getElementById("selfCareRitual").value = "";
+      document.getElementById("selfCareNote").value = "";
+      selfCareForm.querySelectorAll('input[name="selfCareNeed"]').forEach(input => { input.checked = false; });
+      await loadSelfCareEntries(user.uid);
+    } catch (error) {
+      selfCareStatus.textContent = "No se ha podido guardar todavía. Hay que autorizar de forma privada la nueva sección en las reglas de Firebase. Código: " + (error.code || "error");
+    } finally { button.disabled = false; }
+  });
+
+  async function loadSelfCareEntries(uid) {
+    if (!selfCareEntries) return;
+    selfCareEntries.innerHTML = "<p class='muted'>Cargando tus momentos de cuidado…</p>";
+    try {
+      const snapshot = await db.ref("users/" + uid + "/selfCareEntries").once("value");
+      const records = Object.entries(snapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
+      records.sort((a,b) => String(b.date || "").localeCompare(String(a.date || "")) || Number(b.createdAt || 0) - Number(a.createdAt || 0));
+      loadedSelfCareRecords = records;
+      renderMonthlySummary();
+      selfCareEntries.textContent = "";
+      if (!records.length) {
+        loadedSelfCareRecords = [];
+        renderMonthlySummary();
+        selfCareEntries.innerHTML = "<p class='muted'>Todavía no has guardado ningún momento. Puedes empezar con algo pequeño, sin exigencias. 🌷</p>";
+        return;
+      }
+      records.forEach(record => {
+        const card = document.createElement("article");
+        card.className = "self-care-card";
+        const title = document.createElement("h3");
+        title.textContent = record.feeling ? "✿ " + record.feeling : "✿ Mi momento de cuidado";
+        card.appendChild(title);
+        const date = document.createElement("div");
+        date.className = "self-care-meta";
+        date.textContent = formatDate(record.date);
+        card.appendChild(date);
+        if (record.needs) {
+          const needs = document.createElement("div");
+          needs.className = "self-care-needs";
+          String(record.needs).split(", ").filter(Boolean).forEach(value => {
+            const chip = document.createElement("span"); chip.textContent = value; needs.appendChild(chip);
+          });
+          card.appendChild(needs);
+        }
+        if (record.ritual) {
+          const ritual = document.createElement("p"); ritual.textContent = "Mi gesto de cuidado: " + record.ritual; card.appendChild(ritual);
+        }
+        if (record.note) {
+          const note = document.createElement("p"); note.textContent = record.note; card.appendChild(note);
+        }
+        selfCareEntries.appendChild(card);
+      });
+    } catch (error) {
+      selfCareEntries.innerHTML = "<p class='muted'>No se han podido cargar tus momentos de cuidado. Comprueba las reglas privadas de Firebase. Código: " + (error.code || "error") + "</p>";
+    }
+  }
+
+  async function loadDiaryEntries(uid) {
+    if (!diaryEntries) return;
+    diaryEntries.innerHTML = "<p class='muted'>Cargando tu diario…</p>";
+    try {
+      const snapshot = await db.ref("users/" + uid + "/diaryEntries").once("value");
+      const records = Object.entries(snapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
+      records.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")) || Number(b.createdAt || 0) - Number(a.createdAt || 0));
+      loadedDiaryRecords = records;
+      renderFavoriteAlbum(records);
+      renderMonthlySummary();
+      renderCalendar();
+      if (selectedCalendarDate) showCalendarDay(selectedCalendarDate);
+      diaryEntries.textContent = "";
+      if (!records.length) {
+        diaryEntries.innerHTML = "<p class='muted'>Todavía no has escrito ninguna página. Cuando quieras, empieza por cómo te sientes hoy.</p>";
+        if (diarySearchStatus) diarySearchStatus.textContent = "";
+        return;
+      }
+      records.forEach(record => {
+        const item = document.createElement("article");
+        item.className = "entry";
+        item.dataset.search = [record.date, record.title, record.mood, record.text, ...(Array.isArray(record.tags) ? record.tags : [])].join(" ").toLocaleLowerCase("es");
+        item.dataset.favorite = String(!!record.favorite);
+        const heading = document.createElement("strong");
+        heading.textContent = (record.title ? record.title + " · " : "") + formatDate(record.date);
+        item.appendChild(heading);
+        if (record.mood) {
+          const mood = document.createElement("p");
+          mood.textContent = "Hoy me siento: " + record.mood;
+          item.appendChild(mood);
+        }
+        const body = document.createElement("p");
+        body.style.whiteSpace = "pre-wrap";
+        body.textContent = record.text || "";
+        item.appendChild(body);
+        if (Array.isArray(record.photos) && record.photos.length) {
+          const photoGrid = document.createElement("div"); photoGrid.className = "diary-photo-grid";
+          record.photos.slice(0, 3).forEach((photo, index) => {
+            if (typeof photo !== "string" || !photo.startsWith("data:image/")) return;
+            const img = document.createElement("img"); img.className = "diary-photo"; img.src = photo; img.alt = "Foto del recuerdo " + (index + 1); photoGrid.appendChild(img);
+          });
+          if (photoGrid.childElementCount) item.appendChild(photoGrid);
+        }
+        if (Array.isArray(record.tags) && record.tags.length) {
+          const tagList = document.createElement("div");
+          tagList.className = "diary-tags";
+          record.tags.forEach(tag => {
+            const chip = document.createElement("span");
+            chip.className = "diary-tag";
+            chip.textContent = "♡ " + tag;
+            tagList.appendChild(chip);
+          });
+          item.appendChild(tagList);
+        }
+        const favorite = document.createElement("button");
+        favorite.type = "button"; favorite.className = "favorite-btn " + (record.favorite ? "" : "secondary");
+        favorite.textContent = record.favorite ? "♥ En favoritos" : "♡ Añadir a favoritos";
+        favorite.setAttribute("aria-pressed", String(!!record.favorite));
+        favorite.addEventListener("click", async () => {
+          favorite.disabled = true;
+          try {
+            await db.ref("users/" + uid + "/diaryEntries/" + record.id).update({ favorite: !record.favorite });
+            await loadDiaryEntries(uid);
+            diaryStatus.textContent = record.favorite ? "Recuerdo quitado de favoritos." : "Recuerdo guardado en favoritos. 💗";
+          } catch (error) { favorite.disabled = false; diaryStatus.textContent = "No se ha podido cambiar el favorito. Código: " + (error.code || "error"); }
+        });
+        item.appendChild(favorite);
+        const edit = document.createElement("button");
+        edit.type = "button";
+        edit.textContent = "Editar esta página";
+        edit.addEventListener("click", () => {
+          editingDiaryId = record.id;
+          editingDiaryCreatedAt = record.createdAt || null;
+          document.getElementById("diaryDate").value = record.date || "";
+          document.getElementById("diaryTitle").value = record.title || "";
+          document.getElementById("diaryMood").value = record.mood || "";
+          document.getElementById("diaryTags").value = Array.isArray(record.tags) ? record.tags.join(", ") : "";
+          document.getElementById("diaryText").value = record.text || "";
+          editingDiaryPhotos = Array.isArray(record.photos) ? record.photos.filter(photo => typeof photo === "string" && photo.startsWith("data:image/")).slice(0, 3) : [];
+          renderDiaryPhotoPreview(editingDiaryPhotos);
+          diarySaveButton.textContent = "Guardar cambios";
+          diaryCancelEditButton.classList.remove("hidden");
+          diaryStatus.textContent = "Estás editando una página guardada. 💗";
+          document.getElementById("diaryForm").scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+        item.appendChild(edit);
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "secondary";
+        del.textContent = "Borrar esta página";
+        del.addEventListener("click", async () => {
+          if (!confirm("¿Quieres borrar esta página del diario? No se puede deshacer.")) return;
+          del.disabled = true;
+          try {
+            await db.ref("users/" + uid + "/diaryEntries/" + record.id).remove();
+            await loadDiaryEntries(uid);
+            diaryStatus.textContent = "La página se ha borrado.";
+          } catch (error) {
+            del.disabled = false;
+            diaryStatus.textContent = "No se ha podido borrar. Código: " + (error.code || "error");
+          }
+        });
+        item.appendChild(del);
+        diaryEntries.appendChild(item);
+      });
+      filterDiaryEntries();
+    } catch (error) {
+      diaryEntries.innerHTML = "<p class='muted'>No se ha podido cargar el diario. Puede que las reglas privadas de Firebase aún no permitan esta sección. Código: " + (error.code || "error") + ".</p>";
+    }
+  }
+
+  const diarySearchInput = document.getElementById("diarySearch");
+  const diarySearchStatus = document.getElementById("diarySearchStatus");
+  function filterDiaryEntries() {
+    if (!diaryEntries || !diarySearchInput) return;
+    const query = diarySearchInput.value.trim().toLocaleLowerCase("es");
+    const cards = [...diaryEntries.querySelectorAll("article.entry")];
+    let visible = 0;
+    cards.forEach(card => {
+      const matchesQuery = !query || (card.dataset.search || "").includes(query);
+      const matchesFavorite = !document.getElementById("favoritesOnly").checked || card.dataset.favorite === "true";
+      const matches = matchesQuery && matchesFavorite;
+      card.classList.toggle("hidden", !matches);
+      if (matches) visible++;
+    });
+    if (diarySearchStatus) {
+      if (!loadedDiaryRecords.length) diarySearchStatus.textContent = "";
+      else if (!query) diarySearchStatus.textContent = loadedDiaryRecords.length + (loadedDiaryRecords.length === 1 ? " página guardada." : " páginas guardadas.");
+      else diarySearchStatus.textContent = visible + (visible === 1 ? " resultado." : " resultados.") + (visible ? "" : " Prueba otra palabra o etiqueta.");
+    }
+    let empty = document.getElementById("diarySearchEmpty");
+    if (!empty) {
+      empty = document.createElement("p");
+      empty.id = "diarySearchEmpty";
+      empty.className = "muted hidden";
+      diaryEntries.appendChild(empty);
+    }
+    empty.textContent = query && visible === 0 && cards.length ? "No encuentro páginas con esa búsqueda. 💗" : "";
+    empty.classList.toggle("hidden", !(query && visible === 0 && cards.length));
+  }
+  if (diarySearchInput) diarySearchInput.addEventListener("input", filterDiaryEntries);
+  document.getElementById("favoritesOnly").addEventListener("change", filterDiaryEntries);
+
+  document.getElementById("logoutBtn").addEventListener("click", () => auth.signOut());
+
+  const diaryDateInput = document.getElementById("diaryDate");
+  const localToday = new Date();
+  diaryDateInput.value = localToday.getFullYear() + "-" + String(localToday.getMonth() + 1).padStart(2, "0") + "-" + String(localToday.getDate()).padStart(2, "0");
+
+  auth.onAuthStateChanged((user) => {
+    authPanel.classList.toggle("hidden", !!user);
+    appPanel.classList.toggle("hidden", !user);
+    appTabs.classList.toggle("hidden", !user);
+    if (user) {
+      selectTab("calendario");
+      document.getElementById("accountInfo").textContent =
+        "Sesión iniciada con " + user.email;
+      loadEntries(user.uid);
+    } else {
+      entries.textContent = "";
+    }
+  });
+
+  function formatDate(dateString) {
+    if (!dateString) return "—";
+    const parts = dateString.split("-");
+    return parts.length === 3 ? parts[2] + "/" + parts[1] + "/" + parts[0] : dateString;
+  }
+
+  function showCalendarDay(dateKey) {
+    selectedCalendarDate = dateKey;
+    const title = document.getElementById("calendarDetailsTitle");
+    const details = document.getElementById("calendarDayDetails");
+    if (!title || !details) return;
+    title.textContent = "Anotaciones del " + formatDate(dateKey);
+    details.querySelectorAll(".day-detail-item, .day-details-empty").forEach(node => node.remove());
+
+    const addSection = (heading, lines) => {
+      if (!lines.length) return;
+      const section = document.createElement("div");
+      section.className = "day-detail-item";
+      const strong = document.createElement("strong");
+      strong.textContent = heading;
+      section.appendChild(strong);
+      lines.forEach(line => {
+        const p = document.createElement("p");
+        p.textContent = line;
+        section.appendChild(p);
+      });
+      details.appendChild(section);
+    };
+
+    const cycles = calendarRecords.filter(record => record.periodDate === dateKey);
+    cycles.forEach(record => {
+      const lines = ["Menstruación registrada"];
+      if (record.mood) lines.push("Estado de ánimo: " + record.mood);
+      if (record.symptoms) lines.push("Síntomas: " + record.symptoms);
+      addSection("Mi ciclo", lines);
+    });
+    const diaries = loadedDiaryRecords.filter(record => record.date === dateKey);
+    diaries.forEach(record => {
+      const lines = [];
+      if (record.mood) lines.push("Estado de ánimo: " + record.mood);
+      if (record.text) lines.push(record.text);
+      addSection("Diario" + (record.title ? " · " + record.title : ""), lines.length ? lines : ["Página guardada"]);
+    });
+    const relations = loadedSexRecords.filter(record => record.date === dateKey);
+    relations.forEach(record => {
+      const lines = [];
+      if (record.protection) lines.push("Protección: " + record.protection);
+      if (record.contraception) lines.push("Anticoncepción: " + record.contraception);
+      if (record.ejaculation) lines.push("Eyaculación: " + record.ejaculation);
+      if (record.incident) lines.push("Incidencia: " + record.incident);
+      if (record.notes) lines.push("Notas: " + record.notes);
+      addSection("Relaciones", lines.length ? lines : ["Registro guardado"]);
+    });
+    if (!cycles.length && !diaries.length && !relations.length) {
+      const empty = document.createElement("p");
+      empty.className = "hint day-details-empty";
+      empty.textContent = "No hay anotaciones guardadas para este día.";
+      details.appendChild(empty);
+    }
+    renderCalendar();
+  }
+
+  function renderCalendar() {
+    const grid = document.getElementById("calendarGrid");
+    const title = document.getElementById("calendarTitle");
+    if (!grid || !title) return;
+    const year = calendarMonth.getFullYear(), month = calendarMonth.getMonth();
+    title.textContent = calendarMonth.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+    title.textContent = title.textContent.charAt(0).toLocaleUpperCase("es-ES") + title.textContent.slice(1);
+    grid.textContent = "";
+    ["L","M","X","J","V","S","D"].forEach(day => {
+      const label = document.createElement("div"); label.className = "calendar-weekday"; label.textContent = day; grid.appendChild(label);
+    });
+    const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    for (let i = 0; i < firstWeekday; i++) { const empty = document.createElement("div"); empty.className = "calendar-day empty"; grid.appendChild(empty); }
+    const actualDates = new Set(calendarRecords.map(r => r.periodDate).filter(Boolean));
+    const sorted = [...actualDates].sort();
+    const lengths = [];
+    for (let i = 1; i < sorted.length; i++) {
+      const days = Math.round((new Date(sorted[i] + "T12:00:00") - new Date(sorted[i - 1] + "T12:00:00")) / 86400000);
+      if (days >= 15 && days <= 60) lengths.push(days);
+    }
+    const avg = lengths.length ? Math.round(lengths.reduce((sum, days) => sum + days, 0) / lengths.length) : null;
+    let predicted = null, fertileStart = null, fertileEnd = null;
+    if (avg && sorted.length) {
+      predicted = new Date(sorted[sorted.length - 1] + "T12:00:00"); predicted.setDate(predicted.getDate() + avg);
+      const ovulation = new Date(predicted); ovulation.setDate(ovulation.getDate() - 14);
+      fertileStart = new Date(ovulation); fertileStart.setDate(fertileStart.getDate() - 5);
+      fertileEnd = new Date(ovulation); fertileEnd.setDate(fertileEnd.getDate() + 1);
+    }
+    const dateKey = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    const today = dateKey(new Date());
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day, 12);
+      const key = dateKey(date);
+      const cell = document.createElement("button");
+      cell.type = "button";
+      cell.className = "calendar-day";
+      cell.dataset.date = key;
+      cell.setAttribute("aria-label", formatDate(key));
+      const dayContent = document.createElement("span");
+      dayContent.className = "day-content";
+      const number = document.createElement("span");
+      number.className = "day-number";
+      number.textContent = day;
+      dayContent.appendChild(number);
+      const markers = document.createElement("span");
+      markers.className = "day-markers";
+      const cycleRecordsForDay = calendarRecords.filter(record => record.periodDate === key);
+      const hasPeriod = actualDates.has(key);
+      const hasSymptoms = cycleRecordsForDay.some(record => record.symptoms || record.mood);
+      const hasDiary = loadedDiaryRecords.some(record => record.date === key);
+      const hasRelation = loadedSexRecords.some(record => record.date === key);
+      if (key === today) cell.classList.add("today");
+      if (actualDates.has(key)) { cell.classList.add("actual"); cell.title = "Menstruación registrada"; }
+      else if (predicted && key === dateKey(predicted)) { cell.classList.add("predicted"); cell.title = "Próxima menstruación estimada"; }
+      else if (fertileStart && date >= new Date(fertileStart.getFullYear(), fertileStart.getMonth(), fertileStart.getDate(), 12) && date <= new Date(fertileEnd.getFullYear(), fertileEnd.getMonth(), fertileEnd.getDate(), 12)) { cell.classList.add("fertile"); cell.title = "Ventana fértil estimada"; }
+      if (hasPeriod) { const mark = document.createElement("span"); mark.className = "day-marker period"; mark.textContent = "♥"; mark.title = "Menstruación registrada"; markers.appendChild(mark); }
+      if (hasSymptoms) { const mark = document.createElement("span"); mark.className = "day-marker symptoms"; mark.textContent = "✿"; mark.title = "Síntomas o estado de ánimo"; markers.appendChild(mark); }
+      if (hasDiary) { const mark = document.createElement("span"); mark.className = "day-marker diary"; mark.textContent = "▤"; mark.title = "Página del diario"; markers.appendChild(mark); }
+      if (hasRelation) { const mark = document.createElement("span"); mark.className = "day-marker relation"; mark.textContent = "♡"; mark.title = "Relación registrada"; markers.appendChild(mark); }
+      dayContent.appendChild(markers);
+      cell.appendChild(dayContent);
+      if (key === selectedCalendarDate) cell.classList.add("selected");
+      grid.appendChild(cell);
+    }
+    const miniGrid = document.getElementById("miniCalendarGrid");
+    const miniTitle = document.getElementById("miniCalendarTitle");
+    if (miniGrid && miniTitle) {
+      miniTitle.textContent = title.textContent;
+      miniGrid.textContent = "";
+      Array.from(grid.children).forEach(node => miniGrid.appendChild(node.cloneNode(true)));
+    }
+  }
+
+  function renderDonutChart(visualId, legendId, data, emptyText) {
+    const visual = document.getElementById(visualId);
+    const legend = document.getElementById(legendId);
+    visual.textContent = "";
+    legend.textContent = "";
+    const cleanData = data.filter(item => item.count > 0).sort((a, b) => b.count - a.count);
+    const total = cleanData.reduce((sum, item) => sum + item.count, 0);
+    if (!total) {
+      const message = document.createElement("p");
+      message.className = "circle-empty";
+      message.textContent = emptyText;
+      visual.appendChild(message);
+      return;
+    }
+    const ns = "http://www.w3.org/2000/svg";
+    const colors = ["#c98fa2", "#e4b5c4", "#a87989", "#f0ccd6", "#d8a2b4", "#b98798", "#f5dfe5", "#946678", "#e8c1cc"];
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", "0 0 120 120");
+    svg.setAttribute("class", "donut-svg");
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", "Gráfico circular de " + cleanData.map(item => item.label + ": " + item.count).join(", "));
+    const radius = 42, circumference = 2 * Math.PI * radius;
+    const bg = document.createElementNS(ns, "circle");
+    bg.setAttribute("cx", "60"); bg.setAttribute("cy", "60"); bg.setAttribute("r", String(radius));
+    bg.setAttribute("fill", "none"); bg.setAttribute("stroke", "#f7e9ed"); bg.setAttribute("stroke-width", "13");
+    svg.appendChild(bg);
+    let offset = 0;
+    cleanData.forEach((item, index) => {
+      const segment = document.createElementNS(ns, "circle");
+      const segmentLength = circumference * item.count / total;
+      segment.setAttribute("cx", "60"); segment.setAttribute("cy", "60"); segment.setAttribute("r", String(radius));
+      segment.setAttribute("fill", "none"); segment.setAttribute("stroke", colors[index % colors.length]);
+      segment.setAttribute("stroke-width", "13");
+      segment.setAttribute("stroke-dasharray", segmentLength + " " + (circumference - segmentLength));
+      segment.setAttribute("stroke-dashoffset", String(-offset));
+      segment.setAttribute("transform", "rotate(-90 60 60)");
+      svg.appendChild(segment);
+      offset += segmentLength;
+    });
+    const center = document.createElementNS(ns, "text");
+    center.setAttribute("x", "60"); center.setAttribute("y", "56"); center.setAttribute("class", "donut-center");
+    center.textContent = String(total); svg.appendChild(center);
+    const sub = document.createElementNS(ns, "text");
+    sub.setAttribute("x", "60"); sub.setAttribute("y", "72"); sub.setAttribute("class", "donut-subtitle");
+    sub.textContent = "anotaciones"; svg.appendChild(sub);
+    visual.appendChild(svg);
+    cleanData.forEach((item, index) => {
+      const row = document.createElement("div"); row.className = "circle-legend-row";
+      const dot = document.createElement("span"); dot.className = "circle-dot";
+      dot.style.backgroundColor = colors[index % colors.length]; dot.setAttribute("aria-hidden", "true");
+      const label = document.createElement("span"); label.textContent = item.label;
+      const value = document.createElement("span");
+      value.textContent = item.count + " · " + Math.round(item.count / total * 100) + "%";
+      row.append(dot, label, value); legend.appendChild(row);
+    });
+  }
+
+  function renderMonthlySummary() {
+    const monthInput = document.getElementById("summaryMonth");
+    if (!monthInput) return;
+    const now = new Date();
+    const month = monthInput.value || now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+    if (!monthInput.value) monthInput.value = month;
+    const cycle = loadedCycleRecords.filter(record => String(record.periodDate || "").startsWith(month));
+    const diary = loadedDiaryRecords.filter(record => String(record.date || "").startsWith(month));
+    const selfCare = loadedSelfCareRecords.filter(record => String(record.date || "").startsWith(month));
+    const monthDate = new Date(month + "-15T12:00:00");
+    const monthLabel = Number.isNaN(monthDate.getTime()) ? month : monthDate.toLocaleDateString("es-ES", { month:"long", year:"numeric" });
+    const caption = document.getElementById("monthlyGardenCaption");
+    if (caption) caption.textContent = "Tu pequeño jardín de " + monthLabel + ": cada anotación también cuenta como una forma de cuidarte. ✿";
+    const monthlyArt = document.getElementById("monthlyGardenArt");
+    const selectedSeasonMonth = monthDate.getMonth();
+    const selectedAutumnMonth = selectedSeasonMonth >= 8 && selectedSeasonMonth <= 10;
+    if (monthlyArt) monthlyArt.textContent = selectedAutumnMonth ? "🍂 🎃 ♡ 🎃 🍂" : (selfCare.length ? "✿ ♡ " + (diary.length ? "❀" : "☾") + " ♡ ✿" : "✿ ❀ ☾ ❀ ✿");
+    const selfCareCount = document.getElementById("monthlySelfCareCount");
+    if (selfCareCount) selfCareCount.textContent = String(selfCare.length);
+    document.getElementById("monthlyPeriodCount").textContent = String(new Set(cycle.map(record => record.periodDate).filter(Boolean)).size);
+    document.getElementById("monthlyDiaryCount").textContent = String(diary.length);
+    const moods = {};
+    [...cycle.map(record => record.mood), ...diary.map(record => record.mood)].forEach(mood => { const value = String(mood || "").trim(); if (value) moods[value] = (moods[value] || 0) + 1; });
+    const topMood = Object.entries(moods).sort((a,b) => b[1] - a[1])[0];
+    document.getElementById("monthlyTopMood").textContent = topMood ? topMood[0] : "—";
+    document.getElementById("monthlyMoodCount").textContent = topMood ? topMood[1] + (topMood[1] === 1 ? " anotación" : " anotaciones") : "Sin registros este mes";
+    renderDonutChart("monthlyMoodDonut", "monthlyMoodLegend", Object.entries(moods).map(([label,count]) => ({label,count})), "No has anotado estados de ánimo este mes.");
+    const tags = {};
+    diary.forEach(record => (Array.isArray(record.tags) ? record.tags : []).forEach(tag => { const value = String(tag || "").trim(); if (value) tags[value] = (tags[value] || 0) + 1; }));
+    const topTags = Object.entries(tags).sort((a,b) => b[1] - a[1]).slice(0, 2);
+    document.getElementById("monthlyTopTags").textContent = topTags.length ? topTags.map(([tag]) => tag).join(" · ") : "—";
+    document.getElementById("monthlyTagCount").textContent = topTags.length ? topTags.map(([tag,count]) => tag + ": " + count).join(" · ") : "Sin etiquetas este mes";
+    const symptomText = [...cycle.map(record => String(record.symptoms || "")), ...diary.map(record => String(record.text || ""))].join(" ").toLocaleLowerCase("es");
+    const categories = [
+      ["Dolor o cólicos", /dolor|c[oó]lico|retortij[oó]n|molestia/g], ["Cansancio", /cansancio|cansada|cansado|fatiga|agotamiento/g],
+      ["Dolor de cabeza", /dolor de cabeza|migra[nñ]a|cefalea/g], ["Hinchazón", /hinchaz[oó]n|hinchada|hinchado|inflamaci[oó]n/g],
+      ["Cambios de ánimo", /irritable|irritabilidad|ansiosa|ansioso|triste|sensibl[e]|cambios de [aá]nimo/g],
+      ["Sueño", /insomnio|sue[nñ]o|dorm[ií]/g], ["Náuseas", /n[aá]useas|n[aá]usea/g]
+    ];
+    const symptoms = categories.map(([label,pattern]) => { const matches = symptomText.match(pattern); return {label,count:matches ? matches.length : 0}; }).filter(item => item.count);
+    renderDonutChart("monthlySymptomDonut", "monthlySymptomLegend", symptoms, "No hay síntomas mencionados en los registros de este mes.");
+    const totalRecords = cycle.length + diary.length;
+    document.getElementById("monthlySummaryNote").textContent = totalRecords
+      ? "Resumen de " + month + ": " + totalRecords + (totalRecords === 1 ? " registro" : " registros") + ". Los recuentos reflejan solo lo que has anotado; no indican por sí mismos una tendencia médica."
+      : "Todavía no hay registros en " + month + ". Cuando añadas páginas al diario o registros menstruales, aparecerán aquí.";
+  }
+  document.getElementById("summaryMonth").addEventListener("change", renderMonthlySummary);
+
+  function renderPersonalStats(records) {
+    const dates = [...new Set(records.map(r => r.periodDate).filter(Boolean))].sort();
+    const lengths = [];
+    for (let i = 1; i < dates.length; i++) {
+      const days = Math.round((new Date(dates[i] + "T12:00:00") - new Date(dates[i - 1] + "T12:00:00")) / 86400000);
+      if (days >= 1 && days <= 120) lengths.push(days);
+    }
+    document.getElementById("personalPeriodCount").textContent = String(dates.length);
+    document.getElementById("personalCycleAverage").textContent = lengths.length
+      ? Math.round(lengths.reduce((sum, days) => sum + days, 0) / lengths.length) + " días" : "—";
+    document.getElementById("personalCycleRange").textContent = lengths.length
+      ? Math.min(...lengths) + "–" + Math.max(...lengths) + " días" : "—";
+
+    const moodCounts = {};
+    records.forEach(record => {
+      const mood = String(record.mood || "").trim();
+      if (mood) moodCounts[mood] = (moodCounts[mood] || 0) + 1;
+    });
+    const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0];
+    document.getElementById("personalMood").textContent = topMood ? topMood[0] : "—";
+    document.getElementById("personalMoodCount").textContent = topMood
+      ? topMood[1] + (topMood[1] === 1 ? " anotación" : " anotaciones") : "Todavía no has anotado tu ánimo";
+    renderDonutChart("moodDonut", "moodLegend",
+      Object.entries(moodCounts).map(([label, count]) => ({ label, count })),
+      "Cuando registres cómo te sientes, aquí verás el reparto de tus anotaciones.");
+
+    const text = records.map(record => String(record.symptoms || "").toLocaleLowerCase("es")).join(" ");
+    const categories = [
+      ["Dolor o cólicos", /dolor|c[oó]lico|retortij[oó]n|molestia/g],
+      ["Cansancio", /cansancio|cansada|cansado|fatiga|agotamiento/g],
+      ["Dolor de cabeza", /dolor de cabeza|migra[nñ]a|cefalea/g],
+      ["Hinchazón", /hinchaz[oó]n|hinchada|hinchado|inflamaci[oó]n/g],
+      ["Sensibilidad en el pecho", /pecho sensible|dolor de pecho|sensibilidad mamaria/g],
+      ["Cambios de ánimo", /irritable|irritabilidad|ansiosa|ansioso|triste|sensibl[e]|cambios de [aá]nimo/g],
+      ["Acné o piel", /acn[eé]|granitos|piel/g],
+      ["Sueño", /insomnio|sue[nñ]o|dorm[ií]/g],
+      ["Náuseas", /n[aá]useas|n[aá]usea/g]
+    ];
+    const mentions = categories.map(([label, pattern]) => {
+      const matches = text.match(pattern);
+      return { label, count: matches ? matches.length : 0 };
+    }).filter(item => item.count > 0).sort((a, b) => b.count - a.count);
+    renderDonutChart("symptomDonut", "symptomLegend", mentions,
+      "Cuando tus notas mencionen síntomas habituales, aquí verás su distribución.");
+    const symptomsEl = document.getElementById("personalSymptoms");
+    symptomsEl.textContent = "";
+    if (!mentions.length) {
+      symptomsEl.textContent = records.some(record => String(record.symptoms || "").trim())
+        ? "Aún no se repiten palabras de las categorías habituales. Puedes seguir escribiendo con tus propias palabras."
+        : "Todavía no hay notas de síntomas para resumir.";
+    } else {
+      symptomsEl.textContent = mentions.slice(0, 3).map(item => item.label + " (" + item.count + ")").join(" · ");
+    }
+  }
+
+  function renderCycleSummary(records) {
+    calendarRecords = records.slice();
+    renderCalendar();
+    const dates = [...new Set(records.map(r => r.periodDate).filter(Boolean))].sort();
+    const lengths = [];
+    for (let i = 1; i < dates.length; i++) {
+      const days = Math.round((new Date(dates[i] + "T12:00:00") - new Date(dates[i - 1] + "T12:00:00")) / 86400000);
+      if (days >= 15 && days <= 60) lengths.push({ start: dates[i - 1], end: dates[i], days });
+    }
+    const avg = lengths.length ? Math.round(lengths.reduce((sum, x) => sum + x.days, 0) / lengths.length) : null;
+    renderPersonalStats(records);
+    renderMonthlySummary();
+    document.getElementById("avgCycle").textContent = avg ? avg + " días" : "—";
+    const nextEl = document.getElementById("nextPeriod");
+    const noteEl = document.getElementById("predictionNote");
+    const fertileEl = document.getElementById("fertileEstimate");
+    if (dates.length && avg) {
+      const next = new Date(dates[dates.length - 1] + "T12:00:00");
+      next.setDate(next.getDate() + avg);
+      const nextString = next.getFullYear() + "-" + String(next.getMonth() + 1).padStart(2, "0") + "-" + String(next.getDate()).padStart(2, "0");
+      nextEl.textContent = formatDate(nextString);
+      noteEl.textContent = "Estimación, no una fecha segura";
+      const ovulation = new Date(next);
+      ovulation.setDate(ovulation.getDate() - 14);
+      const fertileStart = new Date(ovulation);
+      fertileStart.setDate(fertileStart.getDate() - 5);
+      const fertileEnd = new Date(ovulation);
+      fertileEnd.setDate(fertileEnd.getDate() + 1);
+      const fmt = d => formatDate(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"));
+      fertileEl.textContent = lengths.length >= 2
+        ? "Ventana fértil orientativa: " + fmt(fertileStart) + "–" + fmt(fertileEnd) + ". La ovulación real puede variar; no uses esta estimación como anticonceptivo."
+        : "Con más ciclos registrados podremos estimar tendencias. La ventana fértil calculada no es fiable como anticonceptivo.";
+    } else {
+      nextEl.textContent = "—";
+      noteEl.textContent = dates.length ? "Necesitamos otro ciclo para estimar" : "Se calculará con tus registros";
+      fertileEl.textContent = "Registra al menos dos primeros días de menstruación para estimar la duración media. Se recomiendan varios ciclos para observar tendencias.";
+    }
+
+    const chart = document.getElementById("cycleChart");
+    chart.textContent = "";
+    const recent = lengths.slice(-6);
+    if (!recent.length) {
+      document.getElementById("chartNote").textContent = "Registra al menos dos menstruaciones para ver el gráfico.";
+      return;
+    }
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", "0 0 320 170");
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", "Gráfico lineal de duración de los ciclos en días");
+    const minDays = Math.min(...recent.map(x => x.days), avg || 28, 21) - 2;
+    const maxDays = Math.max(...recent.map(x => x.days), avg || 28, 35) + 2;
+    const left = 28, right = 306, top = 20, bottom = 124;
+    const xAt = i => recent.length === 1 ? (left + right) / 2 : left + i * (right - left) / (recent.length - 1);
+    const yAt = value => bottom - (value - minDays) / Math.max(1, maxDays - minDays) * (bottom - top);
+    [minDays, Math.round((minDays + maxDays) / 2), maxDays].forEach(value => {
+      const y = yAt(value);
+      const grid = document.createElementNS(ns, "line");
+      grid.setAttribute("x1", left); grid.setAttribute("x2", right);
+      grid.setAttribute("y1", y); grid.setAttribute("y2", y);
+      grid.setAttribute("stroke", "#ead4da"); grid.setAttribute("stroke-dasharray", "3 4");
+      svg.appendChild(grid);
+      const label = document.createElementNS(ns, "text");
+      label.setAttribute("x", 2); label.setAttribute("y", y + 4);
+      label.setAttribute("font-size", "10"); label.setAttribute("fill", "#967985");
+      label.textContent = value;
+      svg.appendChild(label);
+    });
+    if (avg) {
+      const meanY = yAt(avg);
+      const meanLine = document.createElementNS(ns, "line");
+      meanLine.setAttribute("x1", left); meanLine.setAttribute("x2", right);
+      meanLine.setAttribute("y1", meanY); meanLine.setAttribute("y2", meanY);
+      meanLine.setAttribute("stroke", "#a87989"); meanLine.setAttribute("stroke-width", "1.5");
+      meanLine.setAttribute("stroke-dasharray", "5 4");
+      svg.appendChild(meanLine);
+      const meanLabel = document.createElementNS(ns, "text");
+      meanLabel.setAttribute("x", right - 2); meanLabel.setAttribute("y", meanY - 5);
+      meanLabel.setAttribute("text-anchor", "end"); meanLabel.setAttribute("font-size", "9");
+      meanLabel.setAttribute("fill", "#967985");
+      meanLabel.textContent = "Media: " + avg + " d";
+      svg.appendChild(meanLabel);
+    }
+    const area = document.createElementNS(ns, "path");
+    const points = recent.map((item, i) => [xAt(i), yAt(item.days)]);
+    const linePath = points.map((p, i) => (i ? "L" : "M") + p[0] + " " + p[1]).join(" ");
+    area.setAttribute("d", linePath + " L" + points[points.length - 1][0] + " " + bottom + " L" + points[0][0] + " " + bottom + " Z");
+    area.setAttribute("fill", "#e9afc5"); area.setAttribute("fill-opacity", "0.12");
+    svg.appendChild(area);
+    const line = document.createElementNS(ns, "path");
+    line.setAttribute("d", linePath); line.setAttribute("fill", "none");
+    line.setAttribute("stroke", "#c98fa2"); line.setAttribute("stroke-width", "3");
+    line.setAttribute("stroke-linecap", "round"); line.setAttribute("stroke-linejoin", "round");
+    svg.appendChild(line);
+    recent.forEach((item, i) => {
+      const [x, y] = points[i];
+      const dot = document.createElementNS(ns, "circle");
+      dot.setAttribute("cx", x); dot.setAttribute("cy", y); dot.setAttribute("r", "4.5");
+      dot.setAttribute("fill", "#f7e5e9"); dot.setAttribute("stroke", "#b97c91"); dot.setAttribute("stroke-width", "2");
+      const title = document.createElementNS(ns, "title");
+      title.textContent = item.days + " días · " + formatDate(item.end);
+      dot.appendChild(title); svg.appendChild(dot);
+      const value = document.createElementNS(ns, "text");
+      value.setAttribute("x", x); value.setAttribute("y", y - 10);
+      value.setAttribute("text-anchor", "middle"); value.setAttribute("font-size", "11");
+      value.setAttribute("fill", "#59414a"); value.textContent = item.days + " d";
+      svg.appendChild(value);
+      const dateLabel = document.createElementNS(ns, "text");
+      dateLabel.setAttribute("x", x); dateLabel.setAttribute("y", 148);
+      dateLabel.setAttribute("text-anchor", "middle"); dateLabel.setAttribute("class", "chart-label");
+      dateLabel.textContent = formatDate(item.end).slice(0, 5);
+      svg.appendChild(dateLabel);
+    });
+    chart.appendChild(svg);
+    document.getElementById("chartNote").textContent = "Últimos " + recent.length + " ciclos, del más antiguo al más reciente. La línea discontinua marca la media. Las variaciones son comunes; el gráfico no diagnostica problemas.";
+  }
+
+  async function loadEntries(uid) {
+    entries.innerHTML = "<p class='muted'>Cargando…</p>";
+    sexEntries.innerHTML = "<p class='muted'>Cargando…</p>";
+    loadDiaryEntries(uid);
+    loadSelfCareEntries(uid);
+    try {
+      const [cycleSnapshot, sexSnapshot] = await Promise.all([
+        db.ref("users/" + uid + "/cycleEntries").once("value"),
+        db.ref("users/" + uid + "/sexualEntries").once("value")
+      ]);
+      const records = Object.entries(cycleSnapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
+      records.sort((a, b) => String(b.periodDate || "").localeCompare(String(a.periodDate || "")));
+      loadedCycleRecords = records;
+      renderCycleSummary(records);
+      recentEntries.textContent = "";
+      if (!records.length) {
+        recentEntries.innerHTML = "<p class='muted'>Cuando guardes una menstruación, aparecerá aquí.</p>";
+      } else {
+        records.slice(0, 3).forEach(record => {
+          const item = document.createElement("div");
+          item.className = "entry";
+          const date = document.createElement("strong");
+          date.textContent = formatDate(record.periodDate);
+          item.appendChild(date);
+          if (record.mood) {
+            const mood = document.createElement("p");
+            mood.textContent = "Estado de ánimo: " + record.mood;
+            item.appendChild(mood);
+          }
+          if (record.symptoms) {
+            const note = document.createElement("p");
+            note.textContent = record.symptoms;
+            item.appendChild(note);
+          } else {
+            const note = document.createElement("p");
+            note.textContent = "Sin notas añadidas";
+            item.appendChild(note);
+          }
+          recentEntries.appendChild(item);
+        });
+      }
+      entries.textContent = "";
+      const countNote = document.createElement("p");
+      countNote.className = "hint";
+      countNote.textContent = "Registros cargados desde Firebase: " + records.length;
+      entries.appendChild(countNote);
+      if (!records.length) {
+        entries.innerHTML = "<p class='muted'>Todavía no hay registros menstruales.</p>";
+      } else {
+        records.forEach(record => {
+          const item = document.createElement("div");
+          item.className = "entry";
+          const date = document.createElement("strong");
+          date.textContent = formatDate(record.periodDate);
+          item.appendChild(date);
+          if (record.symptoms) {
+            const note = document.createElement("p");
+            note.textContent = record.symptoms;
+            item.appendChild(note);
+          }
+          entries.appendChild(item);
+        });
+      }
+
+      const sexRecords = [];
+      sexSnapshot.forEach(child => sexRecords.push({ id: child.key, ...child.val() }));
+      sexRecords.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+      loadedSexRecords = sexRecords;
+      renderCalendar();
+      if (selectedCalendarDate) showCalendarDay(selectedCalendarDate);
+      sexEntries.textContent = "";
+      if (!sexRecords.length) {
+        sexEntries.innerHTML = "<p class='muted'>Todavía no hay relaciones registradas.</p>";
+      } else {
+        sexRecords.forEach(record => {
+          const item = document.createElement("div");
+          item.className = "entry";
+          const title = document.createElement("strong");
+          title.textContent = formatDate(record.date);
+          item.appendChild(title);
+          const details = document.createElement("p");
+          details.textContent = "Protección: " + (record.protection || "No indicado") +
+            " · Anticoncepción: " + (record.contraception || "No indicado") +
+            " · Eyaculación intravaginal: " + (record.ejaculation || "No indicado") +
+            " · Incidencia: " + (record.incident || "Ninguna indicada");
+          item.appendChild(details);
+          if (record.notes) {
+            const note = document.createElement("p");
+            note.textContent = record.notes;
+            item.appendChild(note);
+          }
+          const del = document.createElement("button");
+          del.type = "button";
+          del.className = "secondary";
+          del.textContent = "Eliminar registro";
+          del.addEventListener("click", async () => {
+            if (!confirm("¿Quieres eliminar este registro de forma permanente?")) return;
+            try {
+              await db.ref("users/" + uid + "/sexualEntries/" + record.id).remove();
+              await loadEntries(uid);
+            } catch (error) {
+              sexStatus.textContent = "No se pudo eliminar. Código: " + error.code;
+            }
+          });
+          item.appendChild(del);
+          sexEntries.appendChild(item);
+        });
+      }
+    } catch (error) {
+      entries.textContent = "";
+      sexEntries.textContent = "";
+      recentEntries.textContent = "";
+      const message = document.createElement("p");
+      message.className = "muted";
+      message.textContent = "No se pudieron cargar todos los registros. Puede que falte autorizar la nueva ruta sexualEntries en las reglas privadas de Firebase. Código: " + error.code;
+      entries.appendChild(message);
+      sexEntries.appendChild(message.cloneNode(true));
+    }
+  }
+
+  document.getElementById("cycleForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const user = auth.currentUser;
+    if (!user) return;
+    const periodDate = document.getElementById("periodDate").value;
+    const symptoms = document.getElementById("symptoms").value.trim();
+    const mood = document.getElementById("mood").value;
+    if (!periodDate) return;
+    const button = document.getElementById("saveBtn");
+    button.disabled = true;
+    saveStatus.textContent = "Guardando…";
+    try {
+      await db.ref("users/" + user.uid + "/cycleEntries").push({
+        periodDate,
+        mood,
+        symptoms,
+        createdAt: firebase.database.ServerValue.TIMESTAMP
+      });
+      saveStatus.textContent = "Registro guardado.";
+      document.getElementById("symptoms").value = "";
+      document.getElementById("mood").value = "";
+      await loadEntries(user.uid);
+    } catch (error) {
+      saveStatus.textContent =
+        "Aún no se puede guardar: primero configuraremos las reglas privadas de la base de datos. Código: " + error.code;
+    } finally {
+      button.disabled = false;
+    }
+  });
+  document.getElementById("sexForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const user = auth.currentUser;
+    if (!user) return;
+    const record = {
+      date: document.getElementById("sexDate").value,
+      protection: document.getElementById("protection").value,
+      contraception: document.getElementById("contraception").value.trim(),
+      ejaculation: document.getElementById("ejaculation").value,
+      incident: document.getElementById("incident").value,
+      notes: document.getElementById("sexNotes").value.trim(),
+      createdAt: firebase.database.ServerValue.TIMESTAMP
+    };
+    if (!record.date) return;
+    const button = document.getElementById("sexSaveBtn");
+    button.disabled = true;
+    sexStatus.textContent = "Guardando…";
+    try {
+      await db.ref("users/" + user.uid + "/sexualEntries").push(record);
+      sexStatus.textContent = "Relación registrada.";
+      document.getElementById("sexForm").reset();
+      await loadEntries(user.uid);
+    } catch (error) {
+      sexStatus.textContent = "No se ha guardado. Primero hay que añadir la ruta sexualEntries a las reglas privadas de Firebase. Código: " + error.code;
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  // El jardín cambia de ambientación según la estación local; no guarda datos personales.
+  (function renderSeasonGarden() {
+    const month = new Date().getMonth();
+    let season;
+    if (month >= 2 && month <= 4) season = { title:"Tu jardín despierta en primavera", message:"Date permiso para empezar de nuevo, con suavidad y a tu propio ritmo.", art:"✿ ❀ 🦋 ❀ ✿", monthly:"✿ ❀ ♡ ❀ ✿" };
+    else if (month >= 5 && month <= 7) season = { title:"Tu jardín florece en verano", message:"Busca pequeños momentos de luz, descanso y alegría. No hace falta hacerlo todo.", art:"☼ ✿ 🦋 ❀ ☼", monthly:"☼ ❀ ♡ ❀ ☼" };
+    else if (month >= 8 && month <= 10) season = { title:"Tu jardín de otoño, entre calabazas", message:"Hojas doradas, pequeñas calabazas y un recordatorio: también mereces tardes acogedoras, calma y cariño.", art:"🍂 🎃 ✿ 🎃 🍂", monthly:"🍂 🎃 ♡ 🎃 🍂" };
+    else season = { title:"Tu jardín descansa en invierno", message:"Incluso cuando todo parece quieto, mereces abrigo, calma y cariño.", art:"✧ ❀ ☾ ❀ ✧", monthly:"✧ ☾ ♡ ☾ ✧" };
+    const title = document.getElementById("seasonGardenTitle");
+    const message = document.getElementById("seasonGardenMessage");
+    const art = document.getElementById("seasonGardenArt");
+    const monthlyArt = document.getElementById("monthlyGardenArt");
+    if (title) title.textContent = season.title;
+    if (message) message.textContent = season.message;
+    if (art) art.textContent = season.art;
+    if (monthlyArt) monthlyArt.textContent = season.monthly;
+  })();
+
+  // Frase inspiradora del día: se elige por fecha local y no guarda datos personales.
+  (function renderDailyPhrase() {
+    const phrases = [
+      "No tienes que poder con todo; también mereces cuidado.",
+      "Escucharte también es una forma de avanzar.",
+      "Puedes ir despacio. Tu ritmo también es válido.",
+      "Descansar no es rendirse; es atenderte.",
+      "No necesitas tenerlo todo claro para tratarte con cariño.",
+      "Tu cuerpo merece paciencia, no exigencias.",
+      "Hoy también cuenta lo pequeño que haces por ti.",
+      "Está bien cambiar de opinión y volver a empezar.",
+      "No tienes que ganarte el derecho a descansar.",
+      "Trátate como tratarías a alguien a quien quieres.",
+      "Puedes dejar para mañana lo que hoy pesa demasiado.",
+      "Sentir mucho no te hace menos capaz.",
+      "Un pequeño gesto de cuidado también es suficiente.",
+      "No todos los días tienes que florecer.",
+      "Date permiso para necesitar lo que necesitas.",
+      "Tu valor no depende de lo productivo que sea tu día.",
+      "Puedes celebrar haber llegado hasta aquí.",
+      "Respira: este momento no tiene que resolverlo todo.",
+      "Mereces palabras amables, también las que te dices a ti misma.",
+      "Hoy puedes elegir la opción más amable contigo.",
+      "Escuchar tus límites también es cuidarte.",
+      "No estás obligada a convertir cada día en una lección.",
+      "Hay fuerza en pedir apoyo y dejarte acompañar.",
+      "Tu bienestar también merece un lugar en tu agenda.",
+      "Puedes empezar de nuevo tantas veces como lo necesites.",
+      "A veces, hacer menos es exactamente lo que necesitas.",
+      "Permítete ser humana, con días fáciles y días difíciles.",
+      "Lo que sientes merece espacio, no juicio.",
+      "Un día difícil no define toda tu historia.",
+      "Vuelve a ti con calma y sin exigencias.",
+      "Que hoy no te falte un poquito de ternura."
+    ];
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const day = Math.floor((new Date(now.getFullYear(), now.getMonth(), now.getDate()) - start) / 86400000);
+    const phrase = document.getElementById("dailyPhraseText");
+    const date = document.getElementById("dailyPhraseDate");
+    const symbols = ["✿ ♡ ☾", "♡ ✧ ✿", "☾ ✿ ♡", "✧ ☼ ♡", "❀ ☾ ✧", "♡ ❀ ✧", "☾ ☆ ♡", "✿ ✧ ☼", "♡ ☾ ✿", "✧ ♡ ❀", "☼ ✿ ♡", "☾ ✧ ❀", "♡ ✿ ☆", "❀ ♡ ☾", "✧ ☼ ✿", "☾ ♡ ✧"];
+    const symbolNode = document.getElementById("dailyPhraseSymbols");
+    if (phrase) phrase.textContent = phrases[(day - 1) % phrases.length];
+    if (symbolNode) symbolNode.textContent = symbols[(day - 1) % symbols.length];
+    if (date) date.textContent = now.toLocaleDateString("es-ES", { weekday:"long", day:"numeric", month:"long" });
+  })();
+
+</script>
+</body>
+</html>
