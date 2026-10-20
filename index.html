@@ -1699,7 +1699,6 @@
       document.getElementById("accountInfo").textContent =
         "Sesión iniciada con " + user.email;
       loadEntries(user.uid);
-      loadLetterResponses(user.uid);
     } else {
       entries.textContent = "";
       const replyHistory = document.getElementById("letterReplyHistory");
@@ -2507,6 +2506,11 @@
         letterReplyHistory.textContent="No se han podido cargar las respuestas ahora mismo. Comprueba tu conexión e inténtalo de nuevo.";
       }
     }
+    // Este rincón tiene su propio ámbito; carga el historial cuando Firebase restaura la sesión.
+    auth.onAuthStateChanged(user => {
+      if (user) loadLetterResponses(user.uid);
+      else if (letterReplyHistory) letterReplyHistory.textContent="Inicia sesión para ver tus respuestas guardadas.";
+    });
     letterReplyForm.addEventListener("submit", async event=>{
       event.preventDefault();
       const user=auth.currentUser;
