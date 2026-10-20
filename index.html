@@ -129,6 +129,15 @@
     .lunar-corner .lunar-copy { display:flex; flex-direction:column; gap:2px; }
     .lunar-corner .lunar-name { font-weight:600; }
     .lunar-corner .lunar-date { color:#987783; font-size:9px; }
+    .garden-entry { margin:10px 0; padding:13px 15px; border:1px solid #efdee2; border-radius:14px; background:rgba(255,255,255,.65); }
+    .garden-entry p { margin:6px 0 0; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .garden-progress, .letter-card, .season-detail { margin:14px 0; padding:16px; border:1px solid #ead2da; border-radius:16px; background:linear-gradient(145deg,#fffaf3,#fff1f5); }
+    .garden-flowers { margin-top:7px; font-size:25px; letter-spacing:5px; overflow-wrap:anywhere; }
+    .gentle-form { margin:12px 0; }
+    .letter-card { max-width:680px; margin:8px auto; text-align:center; padding:clamp(20px,5vw,34px); }
+    .letter-flower { font-size:28px; letter-spacing:5px; margin:10px 0; }
+    #letterMessage { max-width:560px; margin:16px auto; color:#704b5a; font-family:Georgia,"Times New Roman",serif; font-size:clamp(20px,4vw,26px); line-height:1.55; }
+    .season-detail { position:relative; z-index:1; color:#87586a; }
     .lunar-calendar { margin-top:8px; padding:18px; border:1px solid #ead2da; border-radius:18px; background:linear-gradient(145deg,#fffaf3,#fff2f6); }
     .lunar-calendar-head { display:grid; grid-template-columns:42px 1fr 42px; align-items:center; gap:8px; margin-bottom:14px; }
     .lunar-calendar-head h3 { margin:0; text-align:center; color:#87586a; text-transform:capitalize; }
@@ -517,12 +526,60 @@
     <button type="button" role="tab" data-tab="emociones" aria-selected="false">♡ Emociones</button>
     <button type="button" role="tab" data-tab="recuerdos" aria-selected="false">✨ Mi cajita de recuerdos</button>
     <button type="button" role="tab" data-tab="luna" aria-selected="false">☾ Calendario lunar</button>
+    <button type="button" role="tab" data-tab="jardin" aria-selected="false">🌷 Mi jardín de logros</button>
+    <button type="button" role="tab" data-tab="cartitas" aria-selected="false">💌 Cartitas para días difíciles</button>
+    <button type="button" role="tab" data-tab="estaciones" aria-selected="false">🍂 Mi rincón de estaciones</button>
     <button type="button" role="tab" data-tab="autocuidado" aria-selected="false">✿ Autocuidado</button>
     <button type="button" role="tab" data-tab="relaciones" aria-selected="false">Relaciones</button>
     <button type="button" role="tab" data-tab="historial" aria-selected="false">Historial</button>
   </nav>
 
   <section id="appPanel" class="hidden">
+    <div class="panel hidden" data-tab-panel="jardin">
+      <section class="season-garden" aria-labelledby="gardenTitle">
+        <div class="season-garden-art" aria-hidden="true">✿ 🌷 ♡ 🌼 ✿</div>
+        <h2 id="gardenTitle">🌷 Mi jardín de pequeños logros</h2>
+        <p>Cada pequeño gesto cuenta. Cuando haces algo amable por ti, tu jardín florece. No hay metas que cumplir ni días perfectos que alcanzar. ♡</p>
+        <div class="garden-progress" aria-live="polite"><span id="gardenFlowerCount">🌱 Tu jardín está esperando su primera flor.</span><div class="garden-flowers" id="gardenFlowers" aria-hidden="true">🌱 🌱 🌱</div></div>
+      </section>
+      <form id="gardenForm" class="gentle-form">
+        <label for="gardenDate">Fecha</label><input id="gardenDate" type="date" required>
+        <label for="gardenAchievement">¿Qué pequeño gesto has hecho por ti?</label>
+        <select id="gardenAchievement" required>
+          <option value="">Elige un pequeño logro…</option>
+          <option>He descansado sin sentir culpa</option><option>He bebido agua y cuidado mi cuerpo</option>
+          <option>He expresado cómo me siento</option><option>Me he regalado un momento de calma</option>
+          <option>He puesto un límite que necesitaba</option><option>He pedido ayuda o compañía</option>
+          <option>He hecho algo que me hace feliz</option><option>He sido amable conmigo misma</option>
+          <option>Otro pequeño gesto bonito</option>
+        </select>
+        <label for="gardenNote">Una nota para recordar este momento (opcional)</label>
+        <textarea id="gardenNote" maxlength="700" rows="2" placeholder="Hoy quiero reconocerme que…"></textarea>
+        <button id="gardenSaveBtn" type="submit">Añadir una flor a mi jardín 🌸</button>
+      </form>
+      <p id="gardenStatus" class="status" role="status"></p>
+      <h3>Mis pequeñas flores</h3><div id="gardenEntries"><p class="muted">Tus logros aparecerán aquí.</p></div>
+    </div>
+    <div class="panel hidden" data-tab-panel="cartitas">
+      <section class="letter-card" aria-live="polite">
+        <p class="daily-phrase-kicker">♡ Un abrazo en palabras</p>
+        <div class="letter-flower" aria-hidden="true">💌 ✿ ☾</div>
+        <h2 id="letterTitle">Una cartita para ti</h2>
+        <p id="letterMessage">Respira despacito. No tienes que resolverlo todo ahora mismo.</p>
+        <p class="hint">Puedes volver siempre que necesites leer algo amable. Guarda en tu corazón solo lo que te haga bien.</p>
+        <button type="button" id="anotherLetterBtn">Recibir otra cartita ✨</button>
+      </section>
+    </div>
+    <div class="panel hidden" data-tab-panel="estaciones">
+      <section class="season-garden" aria-live="polite" aria-labelledby="seasonCornerTitle">
+        <div class="season-garden-art" id="seasonCornerArt" aria-hidden="true">🍂 🎃 ✿ 🎃 🍂</div>
+        <p class="daily-phrase-kicker">✿ La naturaleza también va a su ritmo</p>
+        <h2 id="seasonCornerTitle">Mi rincón de estaciones</h2>
+        <p id="seasonCornerMessage">Cada estación trae una belleza distinta. Tú también puedes cambiar y descansar a tu ritmo.</p>
+        <div class="season-detail" id="seasonCornerDetail"></div>
+      </section>
+      <p class="hint">La decoración cambia según la estación actual de tu dispositivo. Un pequeño recordatorio de que todo tiene su tiempo. 🌷</p>
+    </div>
     <div class="panel hidden" data-tab-panel="emociones">
       <section class="emotion-corner" aria-labelledby="emotionCornerTitle">
         <p class="daily-phrase-kicker">♡ Un momento para escucharte</p>
@@ -2121,6 +2178,96 @@
     if (nameNode) nameNode.textContent = moon.name;
     if (dateNode) dateNode.textContent = now.toLocaleDateString("es-ES", { day:"numeric", month:"short" });
     if (corner) corner.setAttribute("aria-label", moon.name + ", fase lunar aproximada del " + now.toLocaleDateString("es-ES", { day:"numeric", month:"long" }));
+  })();
+
+  // Nuevos rincones: jardín privado, cartitas de ánimo y decoración estacional.
+  (function setupGentleCorners() {
+    const dateInput = document.getElementById("gardenDate");
+    const gardenForm = document.getElementById("gardenForm");
+    const gardenStatus = document.getElementById("gardenStatus");
+    const gardenEntries = document.getElementById("gardenEntries");
+    const gardenCount = document.getElementById("gardenFlowerCount");
+    const gardenFlowers = document.getElementById("gardenFlowers");
+    if (!gardenForm) return;
+    const today = new Date();
+    dateInput.value = today.getFullYear() + "-" + String(today.getMonth()+1).padStart(2,"0") + "-" + String(today.getDate()).padStart(2,"0");
+    function formatGardenDate(value) {
+      if (!value) return "";
+      const p = value.split("-");
+      return p.length === 3 ? p[2] + "/" + p[1] + "/" + p[0] : value;
+    }
+    function renderGarden(records) {
+      const items = Object.values(records || {}).filter(item => item && typeof item === "object").sort((a,b) => (b.date || "").localeCompare(a.date || ""));
+      const count = items.length;
+      gardenCount.textContent = count === 0 ? "🌱 Tu jardín está esperando su primera flor." : count === 1 ? "🌸 Ya ha florecido tu primera flor. ¡Ese gesto cuenta!" : "🌷 Has cultivado " + count + (count === 1 ? " pequeño logro." : " pequeños logros. Cada uno cuenta.");
+      const symbols = ["🌱","🌷","🌼","🌸","🌺","🌻","💐"];
+      gardenFlowers.textContent = count === 0 ? "🌱  🌱  🌱" : Array.from({length:Math.min(count,12)},(_,i)=>symbols[Math.min(i+1,symbols.length-1)]).join(" ");
+      gardenEntries.replaceChildren();
+      if (!count) { const p=document.createElement("p"); p.className="muted"; p.textContent="Cuando quieras guardar un pequeño logro, aparecerá aquí."; gardenEntries.appendChild(p); return; }
+      items.slice(0,30).forEach(item => {
+        const card=document.createElement("article"); card.className="garden-entry";
+        const heading=document.createElement("strong"); heading.textContent="🌸 "+(item.achievement || "Un pequeño gesto bonito");
+        const date=document.createElement("p"); date.className="hint"; date.textContent=formatGardenDate(item.date);
+        card.append(heading,date);
+        if (item.note) { const note=document.createElement("p"); note.textContent=item.note; card.appendChild(note); }
+        gardenEntries.appendChild(card);
+      });
+    }
+    async function loadGarden(uid) {
+      try {
+        const snapshot=await db.ref("users/"+uid+"/gardenEntries").once("value");
+        renderGarden(snapshot.val() || {});
+      } catch(error) {
+        gardenStatus.textContent="No se ha podido cargar el jardín ahora mismo. Comprueba la conexión e inténtalo de nuevo.";
+      }
+    }
+    gardenForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      const user=auth.currentUser;
+      if (!user) { gardenStatus.textContent="Inicia sesión para guardar tu jardín privado."; return; }
+      const record={date:dateInput.value,achievement:document.getElementById("gardenAchievement").value,note:document.getElementById("gardenNote").value.trim(),createdAt:firebase.database.ServerValue.TIMESTAMP};
+      if (!record.date || !record.achievement) { gardenStatus.textContent="Elige la fecha y el pequeño gesto que quieres celebrar."; return; }
+      const button=document.getElementById("gardenSaveBtn"); button.disabled=true; gardenStatus.textContent="Guardando tu flor…";
+      try {
+        await db.ref("users/"+user.uid+"/gardenEntries").push(record);
+        gardenStatus.textContent="Tu pequeña flor ya forma parte de tu jardín. 💗";
+        document.getElementById("gardenAchievement").value=""; document.getElementById("gardenNote").value="";
+        await loadGarden(user.uid);
+      } catch(error) {
+        gardenStatus.textContent="No se ha podido guardar ahora mismo. Tus reglas privadas de Firebase no se han cambiado.";
+      } finally { button.disabled=false; }
+    });
+    const letters = [
+      ["No tienes que poder con todo","Respira despacito. No tienes que resolverlo todo ahora mismo. Puedes ir paso a paso, y descansar también es avanzar. ♡"],
+      ["Mereces hablarte con ternura","Si hoy te cuesta, prueba a tratarte como tratarías a alguien a quien quieres mucho. Tú también mereces esa ternura. 🌷"],
+      ["Un día difícil no te define","Lo que sientes ahora importa, pero no cuenta toda tu historia. Esta emoción puede cambiar; mientras tanto, no tienes que atravesarla con prisa. 🌙"],
+      ["Descansar también es cuidarte","No necesitas ganarte el descanso ni demostrar que has hecho suficiente. Tu cuerpo y tu corazón merecen pausas. ☁️"],
+      ["Pequeños pasos también son pasos","Aunque hoy solo hayas hecho una cosa pequeña, sigue siendo algo. Reconócete el esfuerzo y permítete empezar de nuevo cuando estés lista. 🌱"],
+      ["Puedes pedir compañía","No tienes que encontrar todas las respuestas a solas. Acercarte a alguien de confianza también puede ser una forma de cuidarte. 💗"],
+      ["Date permiso para sentir","No tienes que esconder ni justificar tus emociones. Puedes escucharlas con curiosidad y elegir qué necesitas en este momento. 🫧"],
+      ["Hoy, un poquito de calma","Afloja los hombros, suelta el aire lentamente y busca una cosa amable a tu alrededor. Por ahora, eso puede ser suficiente. ✨"]
+    ];
+    let lastLetter=-1;
+    document.getElementById("anotherLetterBtn").addEventListener("click", () => {
+      let next=Math.floor(Math.random()*letters.length);
+      if (letters.length>1 && next===lastLetter) next=(next+1)%letters.length;
+      lastLetter=next;
+      document.getElementById("letterTitle").textContent=letters[next][0];
+      document.getElementById("letterMessage").textContent=letters[next][1];
+    });
+    (function renderSeasonCorner() {
+      const month=new Date().getMonth();
+      let season;
+      if (month===2 || month===3 || month===4) season={title:"Primavera · tiempo de florecer",art:"✿ 🌷 🦋 🌼 ✿",message:"La primavera nos recuerda que las cosas bonitas pueden empezar despacito. Date permiso para crecer a tu ritmo.",detail:"Flores nuevas, mariposas y pequeños comienzos. 🌸"};
+      else if (month===5 || month===6 || month===7) season={title:"Verano · tiempo de luz",art:"☀️ 🌼 ✿ 🌻 ☀️",message:"Busca la luz que te haga bien, disfruta de los momentos sencillos y recuerda que también puedes bajar el ritmo.",detail:"Solecito, flores y ratitos para respirar. 🍓"};
+      else if (month===8 || month===9 || month===10) season={title:"Otoño · tiempo de soltar",art:"🍂 🎃 ✿ 🎃 🍂",message:"Como los árboles, puedes soltar lo que pesa y quedarte con lo que te abriga. No hace falta florecer en todas las estaciones.",detail:"Calabacitas, hojas doradas y una taza calentita. 🧡"};
+      else season={title:"Invierno · tiempo de recogerse",art:"❄️ ✨ ☾ ✨ ❄️",message:"Hay belleza en descansar, recogerse y guardar energía. Incluso cuando parece que nada crece, algo se está preparando.",detail:"Estrellas, lunas y calma para los días fríos. 🤍"};
+      document.getElementById("seasonCornerTitle").textContent=season.title;
+      document.getElementById("seasonCornerArt").textContent=season.art;
+      document.getElementById("seasonCornerMessage").textContent=season.message;
+      document.getElementById("seasonCornerDetail").textContent=season.detail;
+    })();
+    auth.onAuthStateChanged(user => { if (user) loadGarden(user.uid); else { gardenEntries.replaceChildren(); gardenCount.textContent="🌱 Tu jardín privado te espera."; gardenFlowers.textContent="🌱 🌱 🌱"; } });
   })();
 
   // Calendario lunar mensual: estimación astronómica local, sin llamadas externas ni datos guardados.
