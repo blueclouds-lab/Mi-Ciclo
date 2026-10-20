@@ -29,8 +29,11 @@
     #authPanel { max-width: 560px; margin: 0 auto; }
     #appPanel:not(.hidden) { display: block; }
     .tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0 auto 18px; }
-    .tabs button { width: auto; margin: 0; padding: 10px 16px; border-radius: 999px; background: #fffaf2; color: #87586a; border-color: #dfc2cc; box-shadow: none; }
+    .tabs button { width: auto; margin: 0; padding: 10px 16px; border-radius: 42% 42% 18% 18% / 30% 30% 18% 18%; background: #fffaf2; color: #87586a; border-color: #e7cbd4; border-width: .75px; box-shadow: none; transition: background .18s ease, transform .18s ease; }
     .tabs button[aria-selected="true"] { background: #c98fa2; color: #fffaf7; border-color: #c98fa2; }
+    .tabs button[aria-selected="true"]::before { content: "✿"; display: inline-block; margin-right: 5px; }
+    .tabs button:focus-visible { outline: 2px solid #b8758d; outline-offset: 3px; }
+    .tabs button:hover { transform: translateY(-1px); }
     #appPanel > .panel { margin-bottom: 16px; }
     #appPanel > .panel.hidden { display: none; }
     h2 { font-family: Georgia, "Times New Roman", serif; font-size: 22px; font-weight: 500; color: #704b5a; margin: 0 0 10px; }
