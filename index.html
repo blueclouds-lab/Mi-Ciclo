@@ -129,6 +129,21 @@
     .lunar-corner .lunar-copy { display:flex; flex-direction:column; gap:2px; }
     .lunar-corner .lunar-name { font-weight:600; }
     .lunar-corner .lunar-date { color:#987783; font-size:9px; }
+    .lunar-calendar { margin-top:8px; padding:18px; border:1px solid #ead2da; border-radius:18px; background:linear-gradient(145deg,#fffaf3,#fff2f6); }
+    .lunar-calendar-head { display:grid; grid-template-columns:42px 1fr 42px; align-items:center; gap:8px; margin-bottom:14px; }
+    .lunar-calendar-head h3 { margin:0; text-align:center; color:#87586a; text-transform:capitalize; }
+    .lunar-calendar-head button { width:40px; height:38px; margin:0; padding:0; border:1px solid #ead4da; background:#fffdf9; color:#87586a; box-shadow:none; font-size:22px; }
+    .lunar-weekdays, .lunar-days { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:5px; }
+    .lunar-weekdays { margin-bottom:6px; text-align:center; color:#987783; font-size:11px; }
+    .lunar-day { display:flex; min-width:0; min-height:62px; flex-direction:column; align-items:center; justify-content:center; gap:3px; border:1px solid #f0dfe4; border-radius:11px; background:rgba(255,255,255,.78); color:#704b5a; }
+    .lunar-day .day-number { font-size:11px; }
+    .lunar-day .day-moon { font-size:19px; line-height:1.1; }
+    .lunar-day.today { border:1.5px solid #c98fa2; background:#f9e8ee; box-shadow:0 0 0 2px rgba(201,143,162,.10); }
+    .lunar-day.empty { border-color:transparent; background:transparent; }
+    .lunar-legend { display:grid; grid-template-columns:repeat(auto-fit,minmax(125px,1fr)); gap:8px; margin-top:14px; }
+    .lunar-legend-item { display:flex; align-items:center; gap:7px; color:#87586a; font-size:12px; }
+    .lunar-legend-item span { font-size:18px; }
+    @media(max-width:480px) { .lunar-calendar { padding:10px; } .lunar-weekdays,.lunar-days { gap:3px; } .lunar-day { min-height:52px; border-radius:8px; } .lunar-day .day-moon { font-size:17px; } }
     @media (max-width:600px) { .lunar-corner { top:9px; right:9px; padding:4px 6px; } .season-garden-art { padding-right:115px; } }
     .season-garden h2 { margin:0 0 5px; font-size:19px; }
     .season-garden p { position:relative; margin:0; max-width:620px; color:#896b77; font-size:13px; line-height:1.6; }
@@ -501,6 +516,7 @@
     <button type="button" role="tab" data-tab="diario" aria-selected="false">Diario</button>
     <button type="button" role="tab" data-tab="emociones" aria-selected="false">♡ Emociones</button>
     <button type="button" role="tab" data-tab="recuerdos" aria-selected="false">✨ Mi cajita de recuerdos</button>
+    <button type="button" role="tab" data-tab="luna" aria-selected="false">☾ Calendario lunar</button>
     <button type="button" role="tab" data-tab="autocuidado" aria-selected="false">✿ Autocuidado</button>
     <button type="button" role="tab" data-tab="relaciones" aria-selected="false">Relaciones</button>
     <button type="button" role="tab" data-tab="historial" aria-selected="false">Historial</button>
@@ -554,6 +570,26 @@
         <p class="hint">Toca un día del calendario para consultar lo que guardaste en esa fecha.</p>
       </section>
       <p class="hint">Las fechas estimadas son orientativas y no sirven para evitar un embarazo.</p>
+    </div>
+    <div class="panel hidden" data-tab-panel="luna">
+      <h2>☾ Mi calendario lunar</h2>
+      <p class="hint">Un pequeño mapa de la luna para cada día del mes, entre flores y rosa empolvado. Las fases se calculan de forma astronómica aproximada y pueden diferir ligeramente de las efemérides oficiales.</p>
+      <section class="lunar-calendar" aria-label="Calendario mensual de fases lunares">
+        <div class="lunar-calendar-head">
+          <button type="button" id="lunarPrevMonth" aria-label="Mes lunar anterior">‹</button>
+          <h3 id="lunarCalendarTitle">Mes y año</h3>
+          <button type="button" id="lunarNextMonth" aria-label="Mes lunar siguiente">›</button>
+        </div>
+        <div class="lunar-weekdays" aria-hidden="true"><span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+        <div class="lunar-days" id="lunarCalendarDays" role="grid" aria-label="Días y fases de la luna"></div>
+      </section>
+      <div class="lunar-legend" aria-label="Leyenda de fases lunares">
+        <div class="lunar-legend-item"><span>🌑</span> Luna nueva</div>
+        <div class="lunar-legend-item"><span>🌓</span> Cuarto creciente</div>
+        <div class="lunar-legend-item"><span>🌕</span> Luna llena</div>
+        <div class="lunar-legend-item"><span>🌗</span> Cuarto menguante</div>
+      </div>
+      <p class="hint">Las fases lunares no predicen el ciclo menstrual ni sustituyen información astronómica oficial; aquí son una guía visual orientativa.</p>
     </div>
     <div class="panel hidden" data-tab-panel="ciclo">
       <h2>Registrar menstruación</h2>
@@ -2085,6 +2121,64 @@
     if (nameNode) nameNode.textContent = moon.name;
     if (dateNode) dateNode.textContent = now.toLocaleDateString("es-ES", { day:"numeric", month:"short" });
     if (corner) corner.setAttribute("aria-label", moon.name + ", fase lunar aproximada del " + now.toLocaleDateString("es-ES", { day:"numeric", month:"long" }));
+  })();
+
+  // Calendario lunar mensual: estimación astronómica local, sin llamadas externas ni datos guardados.
+  (function setupLunarCalendar() {
+    const title = document.getElementById("lunarCalendarTitle");
+    const daysGrid = document.getElementById("lunarCalendarDays");
+    if (!title || !daysGrid) return;
+    const knownNewMoon = Date.UTC(2000, 0, 6, 18, 14);
+    const synodicMonth = 29.530588853;
+    let shownMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    function phaseFor(date) {
+      const utcMidday = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 12);
+      const age = (((utcMidday - knownNewMoon) / 86400000) % synodicMonth + synodicMonth) % synodicMonth;
+      const fraction = age / synodicMonth;
+      if (fraction < 0.035 || fraction >= 0.965) return { name:"Luna nueva", icon:"🌑" };
+      if (fraction < 0.215) return { name:"Luna creciente", icon:"🌒" };
+      if (fraction < 0.285) return { name:"Cuarto creciente", icon:"🌓" };
+      if (fraction < 0.465) return { name:"Gibosa creciente", icon:"🌔" };
+      if (fraction < 0.535) return { name:"Luna llena", icon:"🌕" };
+      if (fraction < 0.715) return { name:"Gibosa menguante", icon:"🌖" };
+      if (fraction < 0.785) return { name:"Cuarto menguante", icon:"🌗" };
+      return { name:"Luna menguante", icon:"🌘" };
+    }
+    function render() {
+      title.textContent = shownMonth.toLocaleDateString("es-ES", { month:"long", year:"numeric" });
+      daysGrid.replaceChildren();
+      const firstDay = new Date(shownMonth.getFullYear(), shownMonth.getMonth(), 1);
+      const offset = (firstDay.getDay() + 6) % 7;
+      for (let i = 0; i < offset; i++) {
+        const blank = document.createElement("div");
+        blank.className = "lunar-day empty";
+        blank.setAttribute("aria-hidden", "true");
+        daysGrid.appendChild(blank);
+      }
+      const count = new Date(shownMonth.getFullYear(), shownMonth.getMonth() + 1, 0).getDate();
+      const today = new Date();
+      for (let number = 1; number <= count; number++) {
+        const date = new Date(shownMonth.getFullYear(), shownMonth.getMonth(), number);
+        const phase = phaseFor(date);
+        const cell = document.createElement("div");
+        cell.className = "lunar-day" + (date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth() && number === today.getDate() ? " today" : "");
+        cell.setAttribute("role", "gridcell");
+        cell.setAttribute("aria-label", number + " de " + shownMonth.toLocaleDateString("es-ES", { month:"long" }) + ": " + phase.name);
+        cell.title = phase.name;
+        const dayNumber = document.createElement("span");
+        dayNumber.className = "day-number";
+        dayNumber.textContent = String(number);
+        const moon = document.createElement("span");
+        moon.className = "day-moon";
+        moon.setAttribute("aria-hidden", "true");
+        moon.textContent = phase.icon;
+        cell.append(dayNumber, moon);
+        daysGrid.appendChild(cell);
+      }
+    }
+    document.getElementById("lunarPrevMonth").addEventListener("click", () => { shownMonth = new Date(shownMonth.getFullYear(), shownMonth.getMonth() - 1, 1); render(); });
+    document.getElementById("lunarNextMonth").addEventListener("click", () => { shownMonth = new Date(shownMonth.getFullYear(), shownMonth.getMonth() + 1, 1); render(); });
+    render();
   })();
 
   // El jardín cambia de ambientación según la estación local; no guarda datos personales.
