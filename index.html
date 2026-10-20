@@ -492,6 +492,29 @@
       pointer-events:none;
     }
 
+    .cycle-map-hero { text-align:center; padding:18px 14px 20px; border-radius:22px; background:linear-gradient(145deg,#fff4f6,#fffaf2); border:1px solid #f0dfe4; margin-bottom:18px; }
+    .cycle-map-flower { color:#c98fa2; letter-spacing:4px; font-size:18px; }
+    .cycle-map-hero h2 { margin:8px 0; }
+    .cycle-map-empty { text-align:center; padding:22px 16px; border:1px dashed #e7cbd4; border-radius:18px; background:rgba(255,250,246,.7); }
+    .cycle-map-empty-art { font-size:27px; letter-spacing:6px; }
+    .cycle-map-summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:16px 0; }
+    .cycle-map-stat { padding:16px; border:1px solid #efdee2; border-radius:17px; background:#fffaf7; }
+    .cycle-map-stat .cycle-map-stat-label { display:block; font-size:12px; color:#967985; margin-bottom:5px; }
+    .cycle-map-stat strong { display:block; font-family:Georgia,serif; font-size:22px; color:#704b5a; font-weight:500; }
+    .cycle-map-progress-wrap { padding:18px; border:1px solid #efdee2; border-radius:18px; background:#fffdf9; margin:14px 0; }
+    .cycle-map-progress { height:12px; border-radius:99px; background:linear-gradient(90deg,#d9a0b3 0%,#f1d5dc 25%,#e6d9f0 52%,#c8dce6 76%,#ead6c0 100%); position:relative; margin:16px 0 8px; }
+    .cycle-map-marker { position:absolute; top:50%; left:0%; width:22px; height:22px; transform:translate(-50%,-50%); border:3px solid white; border-radius:50%; background:#87586a; box-shadow:0 1px 7px #87586a55; }
+    .cycle-map-scale { display:flex; justify-content:space-between; gap:8px; color:#967985; font-size:11px; }
+    .cycle-map-phases { display:grid; grid-template-columns:repeat(auto-fit,minmax(145px,1fr)); gap:10px; margin:16px 0; }
+    .cycle-map-phase { border:1px solid #efdee2; border-radius:16px; padding:14px; background:#fffaf7; }
+    .cycle-map-phase.active { border:2px solid #c98fa2; background:#fff0f4; box-shadow:0 4px 14px #c98fa21c; }
+    .cycle-map-phase .phase-icon { font-size:23px; }
+    .cycle-map-phase h3 { font-size:15px; margin:6px 0; }
+    .cycle-map-phase p { margin:0; color:#806875; font-size:13px; }
+    .cycle-map-reflection { margin:16px 0; padding:16px; border-radius:17px; background:#fbf0f3; border:1px solid #efdee2; overflow-wrap:anywhere; }
+    .cycle-map-reflection h3 { margin-top:0; font-size:16px; }
+    .cycle-map-note { margin-top:20px; }
+    @media(max-width:520px) { .cycle-map-summary { grid-template-columns:repeat(2,minmax(0,1fr)); } .cycle-map-stat { padding:12px; } .cycle-map-stat strong { font-size:19px; } .cycle-map-phases { grid-template-columns:1fr 1fr; } }
   </style>
 </head>
 <body>
@@ -522,6 +545,7 @@
     <button type="button" role="tab" data-tab="resumen" aria-selected="true">Resumen</button>
     <button type="button" role="tab" data-tab="calendario" aria-selected="false">Calendario</button>
     <button type="button" role="tab" data-tab="ciclo" aria-selected="false">Mi ciclo</button>
+    <button type="button" role="tab" data-tab="mapa-ciclo" aria-selected="false">🌙 Mi mapa del ciclo</button>
     <button type="button" role="tab" data-tab="diario" aria-selected="false">Diario</button>
     <button type="button" role="tab" data-tab="emociones" aria-selected="false">♡ Emociones</button>
     <button type="button" role="tab" data-tab="recuerdos" aria-selected="false">✨ Mi cajita de recuerdos</button>
@@ -683,6 +707,22 @@
         <button id="saveBtn" type="submit">Guardar registro</button>
       </form>
       <p id="saveStatus" class="status" role="status"></p>
+    </div>
+    <div class="panel hidden" data-tab-panel="mapa-ciclo" id="cycleMapPanel">
+      <section class="cycle-map-hero">
+        <div class="cycle-map-flower" aria-hidden="true">🌷 · ☾ · ✿</div>
+        <h2>🌙 Mi mapa del ciclo</h2>
+        <p class="muted">Una pequeña brújula para conocer tus fechas y escuchar cómo te encuentras, a tu propio ritmo.</p>
+      </section>
+      <div id="cycleMapContent" aria-live="polite">
+        <div class="cycle-map-empty">
+          <div class="cycle-map-empty-art" aria-hidden="true">🌱 🌷 🌱</div>
+          <h3>Tu mapa empezará a florecer aquí</h3>
+          <p>Cuando guardes el primer día de una menstruación en «Mi ciclo», aquí aparecerá una estimación de tu momento del ciclo.</p>
+          <button type="button" class="secondary" id="cycleMapGoToForm">Ir a registrar mi ciclo</button>
+        </div>
+      </div>
+      <p class="hint cycle-map-note">Las fases y fechas son orientativas, se calculan a partir de los registros que hayas guardado y pueden variar. No confirman la ovulación ni sirven como método anticonceptivo o diagnóstico.</p>
     </div>
     <div class="panel" data-tab-panel="resumen">
       <section class="season-garden" id="seasonGarden" aria-live="polite">
@@ -1991,6 +2031,79 @@
     document.getElementById("chartNote").textContent = "Últimos " + recent.length + " ciclos, del más antiguo al más reciente. La línea discontinua marca la media. Las variaciones son comunes; el gráfico no diagnostica problemas.";
   }
 
+  function renderCycleMap() {
+    const host = document.getElementById("cycleMapContent");
+    if (!host) return;
+    const today = new Date();
+    today.setHours(12, 0, 0, 0);
+    const todayString = today.getFullYear() + "-" + String(today.getMonth() + 1).padStart(2, "0") + "-" + String(today.getDate()).padStart(2, "0");
+    const uniqueDates = [...new Set((loadedCycleRecords || []).map(record => String(record.periodDate || "")).filter(date => /^\d{4}-\d{2}-\d{2}$/.test(date) && date <= todayString))].sort();
+    const intervals = [];
+    for (let i = 1; i < uniqueDates.length; i++) {
+      const diff = Math.round((new Date(uniqueDates[i] + "T12:00:00") - new Date(uniqueDates[i - 1] + "T12:00:00")) / 86400000);
+      if (diff >= 15 && diff <= 60) intervals.push(diff);
+    }
+    if (!uniqueDates.length) {
+      host.innerHTML = '<div class="cycle-map-empty"><div class="cycle-map-empty-art" aria-hidden="true">🌱 🌷 🌱</div><h3>Tu mapa empezará a florecer aquí</h3><p>Cuando guardes el primer día de una menstruación en «Mi ciclo», aquí aparecerá una estimación de tu momento del ciclo.</p><button type="button" class="secondary" id="cycleMapGoToForm">Ir a registrar mi ciclo</button></div>';
+      const emptyButton = document.getElementById("cycleMapGoToForm");
+      if (emptyButton) emptyButton.addEventListener("click", () => selectTab("ciclo"));
+      return;
+    }
+    const latestDate = uniqueDates[uniqueDates.length - 1];
+    const start = new Date(latestDate + "T12:00:00");
+    const cycleDay = Math.max(1, Math.floor((today - start) / 86400000) + 1);
+    const cycleLength = intervals.length ? Math.round(intervals.reduce((sum, n) => sum + n, 0) / intervals.length) : 28;
+    const estimatedNext = new Date(start);
+    estimatedNext.setDate(estimatedNext.getDate() + cycleLength);
+    const nextLabel = estimatedNext.toLocaleDateString("es-ES", { day:"numeric", month:"long" });
+    const dayOfOvulation = Math.max(10, cycleLength - 14);
+    const isBeyondEstimate = cycleDay > cycleLength;
+    let currentPhase = "lutea";
+    let phaseName = "Fase lútea";
+    let phaseText = "Un momento para bajar el ritmo si lo necesitas y observar cómo te sientes.";
+    if (cycleDay <= 5) {
+      currentPhase = "menstrual"; phaseName = "Fase menstrual";
+      phaseText = "Días de menstruación. Descansa si te hace falta y escucha las señales de tu cuerpo.";
+    } else if (cycleDay >= dayOfOvulation - 2 && cycleDay <= dayOfOvulation + 2) {
+      currentPhase = "ovulacion"; phaseName = "Ventana estimada de ovulación";
+      phaseText = "Una ventana aproximada según la duración estimada; no confirma que la ovulación esté ocurriendo.";
+    } else if (cycleDay < dayOfOvulation - 2) {
+      currentPhase = "folicular"; phaseName = "Fase folicular";
+      phaseText = "Después de la menstruación. Cada persona puede notar cambios distintos en su energía y ánimo.";
+    }
+    if (isBeyondEstimate) {
+      phaseName = "Más allá de la duración estimada";
+      phaseText = "Tu siguiente menstruación podría estar cerca, pero los ciclos varían. Si tus fechas cambian, puedes seguir registrándolas sin presión.";
+      currentPhase = "lutea";
+    }
+    const progress = Math.max(3, Math.min(100, (cycleDay / cycleLength) * 100));
+    const dayLabel = cycleDay > cycleLength ? "Día " + cycleDay : "Día " + cycleDay + " de ~" + cycleLength;
+    const recordsOnLatest = (loadedCycleRecords || []).filter(record => String(record.periodDate || "") === latestDate);
+    const latestRecord = recordsOnLatest[recordsOnLatest.length - 1] || {};
+    host.innerHTML = '<div class="cycle-map-summary">' +
+      '<div class="cycle-map-stat"><span class="cycle-map-stat-label">Tu momento actual</span><strong id="cycleMapCurrentDay"></strong><span class="muted" id="cycleMapCurrentPhase"></span></div>' +
+      '<div class="cycle-map-stat"><span class="cycle-map-stat-label">Último inicio registrado</span><strong id="cycleMapLastPeriod"></strong><span class="muted">Según tus anotaciones</span></div>' +
+      '<div class="cycle-map-stat"><span class="cycle-map-stat-label">Próxima fecha orientativa</span><strong id="cycleMapNextPeriod"></strong><span class="muted" id="cycleMapAverage"></span></div>' +
+      '</div><div class="cycle-map-progress-wrap"><h3>🌸 El recorrido de este ciclo</h3><p class="muted">Tu posición aproximada dentro del ciclo estimado.</p><div class="cycle-map-progress" role="img" aria-label="Progreso aproximado del ciclo"><span class="cycle-map-marker" id="cycleMapMarker"></span></div><div class="cycle-map-scale"><span>Inicio</span><span>Mitad del ciclo</span><span>Próxima fecha estimada</span></div></div>' +
+      '<div class="cycle-map-phases">' +
+      '<article class="cycle-map-phase" data-phase="menstrual"><div class="phase-icon">🌺</div><h3>Menstrual</h3><p>Días de sangrado registrados o estimados al inicio del ciclo.</p></article>' +
+      '<article class="cycle-map-phase" data-phase="folicular"><div class="phase-icon">🌱</div><h3>Folicular</h3><p>La etapa entre el inicio de la menstruación y la ovulación estimada.</p></article>' +
+      '<article class="cycle-map-phase" data-phase="ovulacion"><div class="phase-icon">🌼</div><h3>Ovulación estimada</h3><p>Fecha aproximada; no puede confirmarse solo con el calendario.</p></article>' +
+      '<article class="cycle-map-phase" data-phase="lutea"><div class="phase-icon">🌙</div><h3>Lútea</h3><p>La etapa posterior a la ovulación estimada y antes de la siguiente menstruación.</p></article>' +
+      '</div><div class="cycle-map-reflection"><h3>💗 Un recordatorio para ti</h3><p id="cycleMapPhaseMessage"></p><p id="cycleMapRecentFeeling"></p></div>';
+    document.getElementById("cycleMapCurrentDay").textContent = dayLabel;
+    document.getElementById("cycleMapCurrentPhase").textContent = phaseName;
+    document.getElementById("cycleMapLastPeriod").textContent = start.toLocaleDateString("es-ES", { day:"numeric", month:"short", year:"numeric" });
+    document.getElementById("cycleMapNextPeriod").textContent = nextLabel;
+    document.getElementById("cycleMapAverage").textContent = intervals.length ? "Media personal: " + cycleLength + " días" : "Estimación inicial de 28 días";
+    document.getElementById("cycleMapMarker").style.left = progress + "%";
+    document.getElementById("cycleMapPhaseMessage").textContent = phaseText;
+    const recentFeeling = document.getElementById("cycleMapRecentFeeling");
+    const personalNotes = [latestRecord.mood ? "Cómo te sentías al registrarlo: " + latestRecord.mood : "", latestRecord.symptoms ? "Tu nota: " + latestRecord.symptoms : ""].filter(Boolean);
+    recentFeeling.textContent = personalNotes.length ? personalNotes.join(" · ") : "No añadiste una nota al último registro. Puedes hacerlo cuando te apetezca en «Mi ciclo».";
+    host.querySelectorAll("[data-phase]").forEach(card => card.classList.toggle("active", card.dataset.phase === currentPhase));
+  }
+
   async function loadEntries(uid) {
     entries.innerHTML = "<p class='muted'>Cargando…</p>";
     sexEntries.innerHTML = "<p class='muted'>Cargando…</p>";
@@ -2005,6 +2118,7 @@
       records.sort((a, b) => String(b.periodDate || "").localeCompare(String(a.periodDate || "")));
       loadedCycleRecords = records;
       renderCycleSummary(records);
+      renderCycleMap();
       recentEntries.textContent = "";
       if (!records.length) {
         recentEntries.innerHTML = "<p class='muted'>Cuando guardes una menstruación, aparecerá aquí.</p>";
