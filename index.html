@@ -568,6 +568,18 @@
         <p id="letterMessage">Respira despacito. No tienes que resolverlo todo ahora mismo.</p>
         <p class="hint">Puedes volver siempre que necesites leer algo amable. Guarda en tu corazón solo lo que te haga bien.</p>
         <button type="button" id="anotherLetterBtn">Recibir otra cartita ✨</button>
+        <div class="letter-reply">
+          <h3>💗 Mi respuesta a esta cartita</h3>
+          <p class="hint">¿Qué te gustaría contestarle? Puedes escribir lo que sientes, lo que necesitas o unas palabras para ti.</p>
+          <form id="letterReplyForm">
+            <label for="letterReplyText">Mi respuesta</label>
+            <textarea id="letterReplyText" rows="3" maxlength="1500" placeholder="Querida cartita, hoy quiero decirte que…" required></textarea>
+            <button type="submit" id="letterReplySaveBtn">Guardar mi respuesta 💌</button>
+          </form>
+          <p id="letterReplyStatus" class="status" role="status"></p>
+          <h3>Mis respuestas guardadas</h3>
+          <div id="letterReplyHistory" aria-live="polite"><p class="muted">Tus respuestas aparecerán aquí.</p></div>
+        </div>
       </section>
     </div>
     <div class="panel hidden" data-tab-panel="estaciones">
@@ -1558,8 +1570,11 @@
       document.getElementById("accountInfo").textContent =
         "Sesión iniciada con " + user.email;
       loadEntries(user.uid);
+      loadLetterResponses(user.uid);
     } else {
       entries.textContent = "";
+      const replyHistory = document.getElementById("letterReplyHistory");
+      if (replyHistory) replyHistory.textContent = "Inicia sesión para ver tus respuestas guardadas.";
     }
   });
 
@@ -2254,6 +2269,63 @@
       lastLetter=next;
       document.getElementById("letterTitle").textContent=letters[next][0];
       document.getElementById("letterMessage").textContent=letters[next][1];
+      document.getElementById("letterReplyStatus").textContent="";
+      document.getElementById("letterReplyText").value="";
+    });
+
+    const letterReplyForm=document.getElementById("letterReplyForm");
+    const letterReplyText=document.getElementById("letterReplyText");
+    const letterReplyStatus=document.getElementById("letterReplyStatus");
+    const letterReplyHistory=document.getElementById("letterReplyHistory");
+    function formatLetterReplyDate(value) {
+      if (!value) return "";
+      const date=new Date(value);
+      return Number.isNaN(date.getTime()) ? "" : date.toLocaleString("es-ES",{dateStyle:"medium",timeStyle:"short"});
+    }
+    async function loadLetterResponses(uid) {
+      if (!letterReplyHistory) return;
+      letterReplyHistory.textContent="Cargando tus respuestas…";
+      try {
+        const snapshot=await db.ref("users/"+uid+"/letterResponses").once("value");
+        const records=Object.values(snapshot.val() || {}).filter(item=>item && typeof item==="object").sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+        letterReplyHistory.replaceChildren();
+        if (!records.length) {
+          const p=document.createElement("p"); p.className="muted"; p.textContent="Todavía no has respondido a ninguna cartita. Cuando quieras, este será tu pequeño rincón."; letterReplyHistory.appendChild(p); return;
+        }
+        records.slice(0,20).forEach(item=>{
+          const card=document.createElement("article"); card.className="garden-entry";
+          const heading=document.createElement("strong"); heading.textContent="💌 "+(item.title||"Mi respuesta a una cartita");
+          const date=document.createElement("p"); date.className="hint"; date.textContent=formatLetterReplyDate(item.createdAt);
+          const letter=document.createElement("p"); letter.textContent="Cartita: "+(item.message||"");
+          const reply=document.createElement("p"); reply.textContent="Mi respuesta: "+(item.response||"");
+          card.append(heading,date,letter,reply); letterReplyHistory.appendChild(card);
+        });
+      } catch(error) {
+        letterReplyHistory.textContent="No se han podido cargar las respuestas ahora mismo. Comprueba tu conexión e inténtalo de nuevo.";
+      }
+    }
+    letterReplyForm.addEventListener("submit", async event=>{
+      event.preventDefault();
+      const user=auth.currentUser;
+      const response=letterReplyText.value.trim();
+      if (!user) { letterReplyStatus.textContent="Inicia sesión para guardar tu respuesta."; return; }
+      if (!response) { letterReplyStatus.textContent="Escribe unas palabras antes de guardar."; return; }
+      const button=document.getElementById("letterReplySaveBtn");
+      button.disabled=true;
+      letterReplyStatus.textContent="Guardando tu respuesta…";
+      try {
+        await db.ref("users/"+user.uid+"/letterResponses").push({
+          title:document.getElementById("letterTitle").textContent,
+          message:document.getElementById("letterMessage").textContent,
+          response:response,
+          createdAt:Date.now()
+        });
+        letterReplyText.value="";
+        letterReplyStatus.textContent="Tu respuesta se ha guardado en tu espacio privado. 💗";
+        await loadLetterResponses(user.uid);
+      } catch(error) {
+        letterReplyStatus.textContent="No se ha podido guardar. Tus reglas privadas de Firebase siguen sin cambios.";
+      } finally { button.disabled=false; }
     });
     (function renderSeasonCorner() {
       const month=new Date().getMonth();
