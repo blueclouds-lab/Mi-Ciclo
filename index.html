@@ -604,6 +604,30 @@
       .tabs button { padding: 9px 12px; font-size: 13px; }
     }
 
+  
+    /* Revisión visual final: claridad, tacto cómodo y detalles suaves */
+    .subtitle { max-width: 42rem; margin-left: auto; margin-right: auto; text-wrap: balance; }
+    .panel { border-color: rgba(239,222,226,.95); }
+    .panel > h2 { line-height: 1.3; }
+    .tabs { padding: 4px 2px 9px; scrollbar-width: thin; scrollbar-color: #dfbdc8 transparent; }
+    .tabs button { touch-action: manipulation; }
+    button, input, textarea, select { font: inherit; }
+    input, textarea, select { max-width: 100%; }
+    textarea { line-height: 1.55; }
+    .status, .hint, .muted { overflow-wrap: anywhere; }
+    .garden-entry, .letter-card, .season-detail, .self-care-card { overflow-wrap: anywhere; }
+    img { max-width: 100%; }
+    @media (max-width: 560px) {
+      .tabs { margin-left: -2px; margin-right: -2px; }
+      .tabs button { min-height: 44px; }
+      button { min-height: 42px; }
+      input, textarea, select { font-size: 16px; }
+      .calendar-head, .lunar-calendar-head { gap: 8px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+
   </style>
 </head>
 <body>
