@@ -120,6 +120,15 @@
     .daily-phrase-kicker { margin:0 0 5px; color:#a36e82; font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; }
     .daily-phrase blockquote { margin:0; max-width:650px; color:#704b5a; font-family:Georgia,"Times New Roman",serif; font-size:clamp(18px,4vw,22px); line-height:1.45; }
     .daily-phrase-date { margin:9px 0 0; color:#967985; font-size:12px; }
+    .season-garden { position:relative; overflow:hidden; margin:0 0 16px; padding:17px 18px; border:1px solid #ead2da; border-radius:18px; background:radial-gradient(ellipse at 100% 0%,rgba(232,190,203,.24),transparent 125px),linear-gradient(135deg,#fffaf0,#fff2f5); }
+    .season-garden::before { content:""; position:absolute; width:92px; height:92px; right:-22px; bottom:-34px; border:1px solid rgba(201,143,162,.22); border-radius:50%; box-shadow:0 0 0 10px rgba(201,143,162,.05),0 0 0 21px rgba(201,143,162,.035); pointer-events:none; }
+    .season-garden-art { margin:0 0 5px; color:#c98fa2; font-size:21px; letter-spacing:5px; }
+    .season-garden h2 { margin:0 0 5px; font-size:19px; }
+    .season-garden p { position:relative; margin:0; max-width:620px; color:#896b77; font-size:13px; line-height:1.6; }
+    .monthly-botanical { margin:12px 0 16px; padding:15px 12px; text-align:center; border:1px solid #ead2da; border-radius:17px; background:radial-gradient(ellipse at 0% 100%,rgba(232,190,203,.18),transparent 110px),linear-gradient(135deg,#fff4f6,#fffaf2); }
+    .monthly-botanical-art { margin:0 0 4px; color:#c98fa2; font-size:23px; letter-spacing:6px; }
+    .monthly-botanical p { margin:0; color:#896b77; font-size:12px; }
+    .monthly-summary .stat { background:linear-gradient(145deg,#fffdf8,#fff7f8); }
     .calendar-day.empty { background:transparent; }
     /* Detalles florales suaves: pétalos discretos y acentos rosa empolvado */
     .calendar-day { position:relative; overflow:visible; border-radius:10px 10px 13px 13px; }
@@ -476,6 +485,11 @@
       <p id="saveStatus" class="status" role="status"></p>
     </div>
     <div class="panel" data-tab-panel="resumen">
+      <section class="season-garden" id="seasonGarden" aria-live="polite">
+        <div class="season-garden-art" id="seasonGardenArt" aria-hidden="true">✿ ❀ 🦋 ❀ ✿</div>
+        <h2 id="seasonGardenTitle">Tu jardín de temporada</h2>
+        <p id="seasonGardenMessage">Cada estación tiene su forma de florecer. Tú también puedes ir a tu ritmo.</p>
+      </section>
       <section class="daily-phrase" aria-labelledby="dailyPhraseHeading">
         <p class="daily-phrase-kicker" id="dailyPhraseHeading">✿ Un pensamiento para hoy</p>
         <p class="daily-phrase-symbols" id="dailyPhraseSymbols" aria-hidden="true">✿ ♡ ☾</p>
@@ -682,8 +696,12 @@
       <p class="hint">Este resumen solo analiza las notas que tú has escrito; no interpreta síntomas ni sustituye la orientación de un profesional sanitario.</p>
     </div>
     <div class="panel hidden" data-tab-panel="historial">
-      <h2>Mi resumen mensual</h2>
-      <p class="hint">Elige un mes para revisar lo que has anotado en tu ciclo y en tu diario. Solo resume tus registros, no hace predicciones médicas.</p>
+      <h2>Mi resumen mensual ilustrado</h2>
+      <div class="monthly-botanical">
+        <div class="monthly-botanical-art" id="monthlyGardenArt" aria-hidden="true">✿ ❀ ☾ ❀ ✿</div>
+        <p id="monthlyGardenCaption">Un pequeño jardín de recuerdos de tu mes.</p>
+      </div>
+      <p class="hint">Elige un mes para revisar lo que has anotado en tu ciclo, en tu diario y en tus momentos de cuidado. Solo resume tus registros; no hace predicciones médicas.</p>
       <label for="summaryMonth">Mes que quiero consultar</label>
       <input id="summaryMonth" type="month">
       <div class="stats" style="margin-top:14px">
@@ -691,6 +709,7 @@
         <div class="stat"><span>Páginas del diario</span><strong id="monthlyDiaryCount">0</strong><span>recuerdos escritos</span></div>
         <div class="stat"><span>Estado de ánimo más anotado</span><strong id="monthlyTopMood">—</strong><span id="monthlyMoodCount">Sin registros este mes</span></div>
         <div class="stat"><span>Etiquetas más usadas</span><strong id="monthlyTopTags">—</strong><span id="monthlyTagCount">Sin etiquetas este mes</span></div>
+        <div class="stat"><span>Momentos de autocuidado</span><strong id="monthlySelfCareCount">0</strong><span>gestos anotados este mes</span></div>
       </div>
       <div class="circle-charts">
         <div class="circle-card"><h3>Ánimo del mes</h3><div id="monthlyMoodDonut" class="circle-visual"></div><div id="monthlyMoodLegend" class="circle-legend"></div></div>
@@ -809,6 +828,7 @@
   let loadedCycleRecords = [];
   let loadedSexRecords = [];
   let loadedDiaryRecords = [];
+  let loadedSelfCareRecords = [];
   let selectedCalendarDate = "";
   document.getElementById("prevMonth").addEventListener("click", () => { calendarMonth.setMonth(calendarMonth.getMonth() - 1); renderCalendar(); });
   document.getElementById("nextMonth").addEventListener("click", () => { calendarMonth.setMonth(calendarMonth.getMonth() + 1); renderCalendar(); });
@@ -1083,8 +1103,12 @@
       const snapshot = await db.ref("users/" + uid + "/selfCareEntries").once("value");
       const records = Object.entries(snapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
       records.sort((a,b) => String(b.date || "").localeCompare(String(a.date || "")) || Number(b.createdAt || 0) - Number(a.createdAt || 0));
+      loadedSelfCareRecords = records;
+      renderMonthlySummary();
       selfCareEntries.textContent = "";
       if (!records.length) {
+        loadedSelfCareRecords = [];
+        renderMonthlySummary();
         selfCareEntries.innerHTML = "<p class='muted'>Todavía no has guardado ningún momento. Puedes empezar con algo pequeño, sin exigencias. 🌷</p>";
         return;
       }
@@ -1483,6 +1507,15 @@
     if (!monthInput.value) monthInput.value = month;
     const cycle = loadedCycleRecords.filter(record => String(record.periodDate || "").startsWith(month));
     const diary = loadedDiaryRecords.filter(record => String(record.date || "").startsWith(month));
+    const selfCare = loadedSelfCareRecords.filter(record => String(record.date || "").startsWith(month));
+    const monthDate = new Date(month + "-15T12:00:00");
+    const monthLabel = Number.isNaN(monthDate.getTime()) ? month : monthDate.toLocaleDateString("es-ES", { month:"long", year:"numeric" });
+    const caption = document.getElementById("monthlyGardenCaption");
+    if (caption) caption.textContent = "Tu pequeño jardín de " + monthLabel + ": cada anotación también cuenta como una forma de cuidarte. ✿";
+    const monthlyArt = document.getElementById("monthlyGardenArt");
+    if (monthlyArt) monthlyArt.textContent = selfCare.length ? "✿ ♡ " + (diary.length ? "❀" : "☾") + " ♡ ✿" : "✿ ❀ ☾ ❀ ✿";
+    const selfCareCount = document.getElementById("monthlySelfCareCount");
+    if (selfCareCount) selfCareCount.textContent = String(selfCare.length);
     document.getElementById("monthlyPeriodCount").textContent = String(new Set(cycle.map(record => record.periodDate).filter(Boolean)).size);
     document.getElementById("monthlyDiaryCount").textContent = String(diary.length);
     const moods = {};
@@ -1861,6 +1894,24 @@
       button.disabled = false;
     }
   });
+
+  // El jardín cambia de ambientación según la estación local; no guarda datos personales.
+  (function renderSeasonGarden() {
+    const month = new Date().getMonth();
+    let season;
+    if (month >= 2 && month <= 4) season = { title:"Tu jardín despierta en primavera", message:"Date permiso para empezar de nuevo, con suavidad y a tu propio ritmo.", art:"✿ ❀ 🦋 ❀ ✿", monthly:"✿ ❀ ♡ ❀ ✿" };
+    else if (month >= 5 && month <= 7) season = { title:"Tu jardín florece en verano", message:"Busca pequeños momentos de luz, descanso y alegría. No hace falta hacerlo todo.", art:"☼ ✿ 🦋 ❀ ☼", monthly:"☼ ❀ ♡ ❀ ☼" };
+    else if (month >= 8 && month <= 10) season = { title:"Tu jardín se llena de tonos de otoño", message:"También hay belleza en soltar, bajar el ritmo y escuchar lo que necesitas.", art:"❀ 🍂 ✿ 🍂 ❀", monthly:"❀ 🍂 ♡ 🍂 ❀" };
+    else season = { title:"Tu jardín descansa en invierno", message:"Incluso cuando todo parece quieto, mereces abrigo, calma y cariño.", art:"✧ ❀ ☾ ❀ ✧", monthly:"✧ ☾ ♡ ☾ ✧" };
+    const title = document.getElementById("seasonGardenTitle");
+    const message = document.getElementById("seasonGardenMessage");
+    const art = document.getElementById("seasonGardenArt");
+    const monthlyArt = document.getElementById("monthlyGardenArt");
+    if (title) title.textContent = season.title;
+    if (message) message.textContent = season.message;
+    if (art) art.textContent = season.art;
+    if (monthlyArt) monthlyArt.textContent = season.monthly;
+  })();
 
   // Frase inspiradora del día: se elige por fecha local y no guarda datos personales.
   (function renderDailyPhrase() {
