@@ -492,12 +492,38 @@
     <button type="button" role="tab" data-tab="calendario" aria-selected="false">Calendario</button>
     <button type="button" role="tab" data-tab="ciclo" aria-selected="false">Mi ciclo</button>
     <button type="button" role="tab" data-tab="diario" aria-selected="false">Diario</button>
+    <button type="button" role="tab" data-tab="emociones" aria-selected="false">♡ Emociones</button>
     <button type="button" role="tab" data-tab="autocuidado" aria-selected="false">✿ Autocuidado</button>
     <button type="button" role="tab" data-tab="relaciones" aria-selected="false">Relaciones</button>
     <button type="button" role="tab" data-tab="historial" aria-selected="false">Historial</button>
   </nav>
 
   <section id="appPanel" class="hidden">
+    <div class="panel hidden" data-tab-panel="emociones">
+      <section class="emotion-corner" aria-labelledby="emotionCornerTitle">
+        <p class="daily-phrase-kicker">♡ Un momento para escucharte</p>
+        <h2 id="emotionCornerTitle">Mi rincón de emociones</h2>
+        <p class="hint">No hay emociones correctas o incorrectas. Elige la que más se acerque a cómo estás hoy; si quieres, añade unas palabras para ti.</p>
+        <form id="emotionForm">
+          <label for="emotionDate">Fecha</label>
+          <input id="emotionDate" type="date" required>
+          <span class="field-label">¿Cómo te sientes?</span>
+          <div class="emotion-options">
+            <label class="emotion-option"><input type="radio" name="dailyEmotion" value="Feliz" required> ☀️ Feliz</label>
+            <label class="emotion-option"><input type="radio" name="dailyEmotion" value="Tranquila"> 🌷 Tranquila</label>
+            <label class="emotion-option"><input type="radio" name="dailyEmotion" value="Sensible"> 💗 Sensible</label>
+            <label class="emotion-option"><input type="radio" name="dailyEmotion" value="Agobiada"> 🌊 Agobiada</label>
+            <label class="emotion-option"><input type="radio" name="dailyEmotion" value="Cansada"> 🌙 Cansada</label>
+            <label class="emotion-option"><input type="radio" name="dailyEmotion" value="Triste"> 🌧️ Triste</label>
+          </div>
+          <label for="emotionNote">Una nota para mí (opcional)</label>
+          <textarea id="emotionNote" rows="2" maxlength="1200" placeholder="¿Qué te ayudaría hoy?"></textarea>
+          <button id="emotionSaveBtn" type="submit">Guardar cómo me siento</button>
+        </form>
+        <p id="emotionStatus" class="status" role="status"></p>
+        <div id="emotionHistory" aria-live="polite"><p class="muted">Tus registros aparecerán aquí.</p></div>
+      </section>
+    </div>
     <div class="panel hidden" data-tab-panel="calendario">
       <h2>Tu calendario</h2>
       <p class="hint">Consulta tus fechas registradas y las estimaciones orientativas de tu ciclo.</p>
@@ -556,29 +582,6 @@
         <p class="daily-phrase-symbols" id="dailyPhraseSymbols" aria-hidden="true">✿ ♡ ☾</p>
         <blockquote id="dailyPhraseText">No tienes que poder con todo; también mereces cuidado.</blockquote>
         <p class="daily-phrase-date" id="dailyPhraseDate"></p>
-      </section>
-      <section class="emotion-corner" aria-labelledby="emotionCornerTitle">
-        <p class="daily-phrase-kicker">♡ Un momento para escucharte</p>
-        <h2 id="emotionCornerTitle">Mi rincón de emociones</h2>
-        <p class="hint">No hay emociones correctas o incorrectas. Elige la que más se acerque a cómo estás hoy; si quieres, añade unas palabras para ti.</p>
-        <form id="emotionForm">
-          <label for="emotionDate">Fecha</label>
-          <input id="emotionDate" type="date" required>
-          <span class="field-label">¿Cómo te sientes?</span>
-          <div class="emotion-options">
-            <label class="emotion-option"><input type="radio" name="dailyEmotion" value="Feliz" required> ☀️ Feliz</label>
-            <label class="emotion-option"><input type="radio" name="dailyEmotion" value="Tranquila"> 🌷 Tranquila</label>
-            <label class="emotion-option"><input type="radio" name="dailyEmotion" value="Sensible"> 💗 Sensible</label>
-            <label class="emotion-option"><input type="radio" name="dailyEmotion" value="Agobiada"> 🌊 Agobiada</label>
-            <label class="emotion-option"><input type="radio" name="dailyEmotion" value="Cansada"> 🌙 Cansada</label>
-            <label class="emotion-option"><input type="radio" name="dailyEmotion" value="Triste"> 🌧️ Triste</label>
-          </div>
-          <label for="emotionNote">Una nota para mí (opcional)</label>
-          <textarea id="emotionNote" rows="2" maxlength="1200" placeholder="¿Qué te ayudaría hoy?"></textarea>
-          <button id="emotionSaveBtn" type="submit">Guardar cómo me siento</button>
-        </form>
-        <p id="emotionStatus" class="status" role="status"></p>
-        <div id="emotionHistory" aria-live="polite"><p class="muted">Tus registros aparecerán aquí.</p></div>
       </section>
       <div class="mini-calendar">
         <div class="mini-calendar-top">
