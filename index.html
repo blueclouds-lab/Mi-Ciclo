@@ -64,6 +64,14 @@
     .diary-photo-wrap button { margin-top:4px; padding:5px 7px; font-size:11px; }
     .favorite-btn { min-width:140px; }
     .monthly-summary { margin-top:18px; padding:16px; border:1px solid #ead4da; border-radius:17px; background:#fffdf8; }
+    .favorite-album { margin:18px 0 24px; padding:16px; border:1px solid #ead4da; border-radius:18px; background:linear-gradient(145deg,#fff8fa,#fffdf8); }
+    .favorite-album h3 { margin:0 0 5px; color:#704b5a; font-family:Georgia,serif; font-size:19px; font-weight:500; }
+    .favorite-album-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(145px,1fr)); gap:11px; margin-top:13px; }
+    .favorite-memory { min-width:0; overflow:hidden; border:1px solid #efdce2; border-radius:14px; background:#fffdf9; }
+    .favorite-memory img, .favorite-memory-placeholder { display:flex; width:100%; aspect-ratio:4 / 3; object-fit:cover; align-items:center; justify-content:center; background:#f9e9ee; color:#b17c91; font-size:28px; }
+    .favorite-memory-caption { padding:10px; }
+    .favorite-memory-caption strong { display:block; color:#704b5a; font-size:13px; line-height:1.4; overflow-wrap:anywhere; }
+    .favorite-memory-caption p { margin:4px 0 0; color:#967985; font-size:11px; line-height:1.45; overflow-wrap:anywhere; }
     .monthly-summary h3 { margin:0 0 8px; color:#704b5a; font-size:16px; }
     .entry button { grid-column: 1 / -1; width: auto; justify-self: start; min-width: 140px; margin-top: 8px; padding: 8px 12px; font-size: 13px; }
     .calendar-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin: 12px 0 18px; }
@@ -288,6 +296,13 @@
         <button id="diaryCancelEditBtn" class="secondary hidden" type="button">Cancelar edición</button>
       </form>
       <p id="diaryStatus" class="status" role="status"></p>
+      <section class="favorite-album" aria-labelledby="favoriteAlbumTitle">
+        <h3 id="favoriteAlbumTitle">♡ Mi álbum de recuerdos</h3>
+        <p class="hint" style="margin:0">Tus páginas favoritas, con sus fotos y fechas, reunidas en un rincón especial.</p>
+        <div id="favoriteAlbumGrid" class="favorite-album-grid">
+          <p class="muted">Tus recuerdos favoritos aparecerán aquí.</p>
+        </div>
+      </section>
       <h2 style="margin-top:28px">Mis páginas</h2>
       <p class="hint">Tus anotaciones más recientes aparecerán aquí. Puedes editar, borrar, buscar por palabras o filtrar por etiquetas.</p>
       <label for="diarySearch">Buscar en mi diario</label>
@@ -682,6 +697,54 @@
     }
   });
 
+  function renderFavoriteAlbum(records) {
+    const grid = document.getElementById("favoriteAlbumGrid");
+    if (!grid) return;
+    grid.textContent = "";
+    const favorites = (records || []).filter(record => !!record.favorite);
+    if (!favorites.length) {
+      const empty = document.createElement("p");
+      empty.className = "muted";
+      empty.textContent = "Todavía no has marcado recuerdos favoritos. Pulsa «Añadir a favoritos» en cualquier página para guardarla aquí. ♡";
+      grid.appendChild(empty);
+      return;
+    }
+    favorites.forEach(record => {
+      const card = document.createElement("article");
+      card.className = "favorite-memory";
+      const photo = Array.isArray(record.photos)
+        ? record.photos.find(value => typeof value === "string" && value.startsWith("data:image/"))
+        : null;
+      if (photo) {
+        const image = document.createElement("img");
+        image.src = photo;
+        image.alt = "Foto de " + (record.title || "un recuerdo favorito");
+        image.loading = "lazy";
+        card.appendChild(image);
+      } else {
+        const placeholder = document.createElement("div");
+        placeholder.className = "favorite-memory-placeholder";
+        placeholder.setAttribute("aria-hidden", "true");
+        placeholder.textContent = "♡";
+        card.appendChild(placeholder);
+      }
+      const caption = document.createElement("div");
+      caption.className = "favorite-memory-caption";
+      const title = document.createElement("strong");
+      title.textContent = record.title || "Un recuerdo especial";
+      caption.appendChild(title);
+      const date = document.createElement("p");
+      date.textContent = formatDate(record.date);
+      caption.appendChild(date);
+      const excerpt = document.createElement("p");
+      const plainText = String(record.text || "").replace(/\\s+/g, " ").trim();
+      excerpt.textContent = plainText.length > 95 ? plainText.slice(0, 92) + "…" : (plainText || "Una página que has guardado con cariño.");
+      caption.appendChild(excerpt);
+      card.appendChild(caption);
+      grid.appendChild(card);
+    });
+  }
+
   async function loadDiaryEntries(uid) {
     if (!diaryEntries) return;
     diaryEntries.innerHTML = "<p class='muted'>Cargando tu diario…</p>";
@@ -690,6 +753,7 @@
       const records = Object.entries(snapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
       records.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")) || Number(b.createdAt || 0) - Number(a.createdAt || 0));
       loadedDiaryRecords = records;
+      renderFavoriteAlbum(records);
       renderMonthlySummary();
       renderCalendar();
       if (selectedCalendarDate) showCalendarDay(selectedCalendarDate);
