@@ -115,7 +115,8 @@
     .self-care-checks label { display:flex; align-items:center; gap:8px; margin:0; padding:9px 10px; border:1px solid #efdee2; border-radius:12px; background:#fffdf9; font-weight:400; }
     .self-care-checks input { width:auto; margin:0; accent-color:#c98fa2; }
     .daily-phrase { position:relative; overflow:hidden; margin:0 0 16px; padding:19px 20px; border:1px solid #ead2da; border-radius:18px; background:linear-gradient(135deg,#fff1f5 0%,#fffaf4 72%); }
-    .daily-phrase::after { content:"✿"; position:absolute; right:13px; top:5px; color:#d8a6b5; font-size:26px; opacity:.7; }
+    .daily-phrase::after { content:var(--daily-symbol, "✿"); position:absolute; right:13px; top:5px; color:#d8a6b5; font-size:26px; opacity:.7; }
+    .daily-phrase-symbols { margin:0 0 7px; color:#c98fa2; font-size:15px; letter-spacing:5px; }
     .daily-phrase-kicker { margin:0 0 5px; color:#a36e82; font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; }
     .daily-phrase blockquote { margin:0; max-width:650px; color:#704b5a; font-family:Georgia,"Times New Roman",serif; font-size:clamp(18px,4vw,22px); line-height:1.45; }
     .daily-phrase-date { margin:9px 0 0; color:#967985; font-size:12px; }
@@ -319,6 +320,7 @@
     <div class="panel" data-tab-panel="resumen">
       <section class="daily-phrase" aria-labelledby="dailyPhraseHeading">
         <p class="daily-phrase-kicker" id="dailyPhraseHeading">✿ Un pensamiento para hoy</p>
+        <p class="daily-phrase-symbols" id="dailyPhraseSymbols" aria-hidden="true">✿ ♡ ☾</p>
         <blockquote id="dailyPhraseText">No tienes que poder con todo; también mereces cuidado.</blockquote>
         <p class="daily-phrase-date" id="dailyPhraseDate"></p>
       </section>
@@ -1742,7 +1744,10 @@
     const day = Math.floor((new Date(now.getFullYear(), now.getMonth(), now.getDate()) - start) / 86400000);
     const phrase = document.getElementById("dailyPhraseText");
     const date = document.getElementById("dailyPhraseDate");
+    const symbols = ["✿ ♡ ☾", "♡ ✧ ✿", "☾ ✿ ♡", "✧ ☼ ♡", "❀ ☾ ✧", "♡ ❀ ✧", "☾ ☆ ♡", "✿ ✧ ☼", "♡ ☾ ✿", "✧ ♡ ❀", "☼ ✿ ♡", "☾ ✧ ❀", "♡ ✿ ☆", "❀ ♡ ☾", "✧ ☼ ✿", "☾ ♡ ✧"];
+    const symbolNode = document.getElementById("dailyPhraseSymbols");
     if (phrase) phrase.textContent = phrases[(day - 1) % phrases.length];
+    if (symbolNode) symbolNode.textContent = symbols[(day - 1) % symbols.length];
     if (date) date.textContent = now.toLocaleDateString("es-ES", { weekday:"long", day:"numeric", month:"long" });
   })();
 
