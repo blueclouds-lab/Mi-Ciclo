@@ -114,6 +114,11 @@
     .self-care-checks { display:grid; grid-template-columns:repeat(auto-fit,minmax(145px,1fr)); gap:8px; margin:8px 0 14px; }
     .self-care-checks label { display:flex; align-items:center; gap:8px; margin:0; padding:9px 10px; border:1px solid #efdee2; border-radius:12px; background:#fffdf9; font-weight:400; }
     .self-care-checks input { width:auto; margin:0; accent-color:#c98fa2; }
+    .daily-phrase { position:relative; overflow:hidden; margin:0 0 16px; padding:19px 20px; border:1px solid #ead2da; border-radius:18px; background:linear-gradient(135deg,#fff1f5 0%,#fffaf4 72%); }
+    .daily-phrase::after { content:"✿"; position:absolute; right:13px; top:5px; color:#d8a6b5; font-size:26px; opacity:.7; }
+    .daily-phrase-kicker { margin:0 0 5px; color:#a36e82; font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; }
+    .daily-phrase blockquote { margin:0; max-width:650px; color:#704b5a; font-family:Georgia,"Times New Roman",serif; font-size:clamp(18px,4vw,22px); line-height:1.45; }
+    .daily-phrase-date { margin:9px 0 0; color:#967985; font-size:12px; }
     .calendar-day.empty { background:transparent; }
     /* Detalles florales suaves: pétalos discretos y acentos rosa empolvado */
     .calendar-day { position:relative; overflow:visible; border-radius:10px 10px 13px 13px; }
@@ -312,6 +317,11 @@
       <p id="saveStatus" class="status" role="status"></p>
     </div>
     <div class="panel" data-tab-panel="resumen">
+      <section class="daily-phrase" aria-labelledby="dailyPhraseHeading">
+        <p class="daily-phrase-kicker" id="dailyPhraseHeading">✿ Un pensamiento para hoy</p>
+        <blockquote id="dailyPhraseText">No tienes que poder con todo; también mereces cuidado.</blockquote>
+        <p class="daily-phrase-date" id="dailyPhraseDate"></p>
+      </section>
       <div class="mini-calendar">
         <div class="mini-calendar-top">
           <h2>Tu mes en un vistazo</h2>
@@ -1691,6 +1701,50 @@
       button.disabled = false;
     }
   });
+
+  // Frase inspiradora del día: se elige por fecha local y no guarda datos personales.
+  (function renderDailyPhrase() {
+    const phrases = [
+      "No tienes que poder con todo; también mereces cuidado.",
+      "Escucharte también es una forma de avanzar.",
+      "Puedes ir despacio. Tu ritmo también es válido.",
+      "Descansar no es rendirse; es atenderte.",
+      "No necesitas tenerlo todo claro para tratarte con cariño.",
+      "Tu cuerpo merece paciencia, no exigencias.",
+      "Hoy también cuenta lo pequeño que haces por ti.",
+      "Está bien cambiar de opinión y volver a empezar.",
+      "No tienes que ganarte el derecho a descansar.",
+      "Trátate como tratarías a alguien a quien quieres.",
+      "Puedes dejar para mañana lo que hoy pesa demasiado.",
+      "Sentir mucho no te hace menos capaz.",
+      "Un pequeño gesto de cuidado también es suficiente.",
+      "No todos los días tienes que florecer.",
+      "Date permiso para necesitar lo que necesitas.",
+      "Tu valor no depende de lo productivo que sea tu día.",
+      "Puedes celebrar haber llegado hasta aquí.",
+      "Respira: este momento no tiene que resolverlo todo.",
+      "Mereces palabras amables, también las que te dices a ti misma.",
+      "Hoy puedes elegir la opción más amable contigo.",
+      "Escuchar tus límites también es cuidarte.",
+      "No estás obligada a convertir cada día en una lección.",
+      "Hay fuerza en pedir apoyo y dejarte acompañar.",
+      "Tu bienestar también merece un lugar en tu agenda.",
+      "Puedes empezar de nuevo tantas veces como lo necesites.",
+      "A veces, hacer menos es exactamente lo que necesitas.",
+      "Permítete ser humana, con días fáciles y días difíciles.",
+      "Lo que sientes merece espacio, no juicio.",
+      "Un día difícil no define toda tu historia.",
+      "Vuelve a ti con calma y sin exigencias.",
+      "Que hoy no te falte un poquito de ternura."
+    ];
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const day = Math.floor((new Date(now.getFullYear(), now.getMonth(), now.getDate()) - start) / 86400000);
+    const phrase = document.getElementById("dailyPhraseText");
+    const date = document.getElementById("dailyPhraseDate");
+    if (phrase) phrase.textContent = phrases[(day - 1) % phrases.length];
+    if (date) date.textContent = now.toLocaleDateString("es-ES", { weekday:"long", day:"numeric", month:"long" });
+  })();
 
 </script>
 </body>
