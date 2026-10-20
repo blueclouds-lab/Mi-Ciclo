@@ -1513,7 +1513,9 @@
     const caption = document.getElementById("monthlyGardenCaption");
     if (caption) caption.textContent = "Tu pequeño jardín de " + monthLabel + ": cada anotación también cuenta como una forma de cuidarte. ✿";
     const monthlyArt = document.getElementById("monthlyGardenArt");
-    if (monthlyArt) monthlyArt.textContent = selfCare.length ? "✿ ♡ " + (diary.length ? "❀" : "☾") + " ♡ ✿" : "✿ ❀ ☾ ❀ ✿";
+    const selectedSeasonMonth = monthDate.getMonth();
+    const selectedAutumnMonth = selectedSeasonMonth >= 8 && selectedSeasonMonth <= 10;
+    if (monthlyArt) monthlyArt.textContent = selectedAutumnMonth ? "🍂 🎃 ♡ 🎃 🍂" : (selfCare.length ? "✿ ♡ " + (diary.length ? "❀" : "☾") + " ♡ ✿" : "✿ ❀ ☾ ❀ ✿");
     const selfCareCount = document.getElementById("monthlySelfCareCount");
     if (selfCareCount) selfCareCount.textContent = String(selfCare.length);
     document.getElementById("monthlyPeriodCount").textContent = String(new Set(cycle.map(record => record.periodDate).filter(Boolean)).size);
@@ -1901,7 +1903,7 @@
     let season;
     if (month >= 2 && month <= 4) season = { title:"Tu jardín despierta en primavera", message:"Date permiso para empezar de nuevo, con suavidad y a tu propio ritmo.", art:"✿ ❀ 🦋 ❀ ✿", monthly:"✿ ❀ ♡ ❀ ✿" };
     else if (month >= 5 && month <= 7) season = { title:"Tu jardín florece en verano", message:"Busca pequeños momentos de luz, descanso y alegría. No hace falta hacerlo todo.", art:"☼ ✿ 🦋 ❀ ☼", monthly:"☼ ❀ ♡ ❀ ☼" };
-    else if (month >= 8 && month <= 10) season = { title:"Tu jardín se llena de tonos de otoño", message:"También hay belleza en soltar, bajar el ritmo y escuchar lo que necesitas.", art:"❀ 🍂 ✿ 🍂 ❀", monthly:"❀ 🍂 ♡ 🍂 ❀" };
+    else if (month >= 8 && month <= 10) season = { title:"Tu jardín de otoño, entre calabazas", message:"Hojas doradas, pequeñas calabazas y un recordatorio: también mereces tardes acogedoras, calma y cariño.", art:"🍂 🎃 ✿ 🎃 🍂", monthly:"🍂 🎃 ♡ 🎃 🍂" };
     else season = { title:"Tu jardín descansa en invierno", message:"Incluso cuando todo parece quieto, mereces abrigo, calma y cariño.", art:"✧ ❀ ☾ ❀ ✧", monthly:"✧ ☾ ♡ ☾ ✧" };
     const title = document.getElementById("seasonGardenTitle");
     const message = document.getElementById("seasonGardenMessage");
