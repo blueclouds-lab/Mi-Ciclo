@@ -60,6 +60,8 @@
     .diary-tag { display:inline-block; border:1px solid #efd4dc; background:#fff0f4; color:#87586a; border-radius:999px; padding:3px 9px; font-size:12px; }
     .diary-photo-grid { grid-column:1 / -1; display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:8px; margin-top:8px; }
     .diary-photo { width:100%; aspect-ratio:1; object-fit:cover; border-radius:12px; border:1px solid #ead4da; background:#fff0f4; }
+    .diary-photo-wrap { min-width:0; }
+    .diary-photo-wrap button { margin-top:4px; padding:5px 7px; font-size:11px; }
     .favorite-btn { min-width:140px; }
     .monthly-summary { margin-top:18px; padding:16px; border:1px solid #ead4da; border-radius:17px; background:#fffdf8; }
     .monthly-summary h3 { margin:0 0 8px; color:#704b5a; font-size:16px; }
@@ -439,8 +441,11 @@
     diaryPhotoPreview.textContent = "";
     (photos || []).forEach((photo, index) => {
       if (!photo || typeof photo !== "string" || !photo.startsWith("data:image/")) return;
+      const wrap = document.createElement("div"); wrap.className = "diary-photo-wrap";
       const img = document.createElement("img"); img.className = "diary-photo"; img.src = photo; img.alt = "Foto del recuerdo " + (index + 1);
-      diaryPhotoPreview.appendChild(img);
+      const remove = document.createElement("button"); remove.type = "button"; remove.className = "secondary"; remove.textContent = "Quitar foto";
+      remove.addEventListener("click", () => { editingDiaryPhotos.splice(index, 1); renderDiaryPhotoPreview(editingDiaryPhotos); });
+      wrap.append(img, remove); diaryPhotoPreview.appendChild(wrap);
     });
   }
   function readCompressedPhoto(file) {
@@ -1053,7 +1058,7 @@
     const topTags = Object.entries(tags).sort((a,b) => b[1] - a[1]).slice(0, 2);
     document.getElementById("monthlyTopTags").textContent = topTags.length ? topTags.map(([tag]) => tag).join(" · ") : "—";
     document.getElementById("monthlyTagCount").textContent = topTags.length ? topTags.map(([tag,count]) => tag + ": " + count).join(" · ") : "Sin etiquetas este mes";
-    const symptomText = cycle.map(record => String(record.symptoms || "").toLocaleLowerCase("es")).join(" ");
+    const symptomText = [...cycle.map(record => String(record.symptoms || "")), ...diary.map(record => String(record.text || ""))].join(" ").toLocaleLowerCase("es");
     const categories = [
       ["Dolor o cólicos", /dolor|c[oó]lico|retortij[oó]n|molestia/g], ["Cansancio", /cansancio|cansada|cansado|fatiga|agotamiento/g],
       ["Dolor de cabeza", /dolor de cabeza|migra[nñ]a|cefalea/g], ["Hinchazón", /hinchaz[oó]n|hinchada|hinchado|inflamaci[oó]n/g],
