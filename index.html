@@ -154,6 +154,60 @@
     }
     @media (max-width: 360px) { .panel { padding: 16px; } #authForm { grid-template-columns: minmax(0,1fr); } #authForm button { grid-column: 1 / -1; } .stats { grid-template-columns: 1fr; } }
     @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; } }
+  
+    /* Refinamiento visual: líneas más finas, superficies suaves y más aire */
+    :root {
+      --border: #efdee2;
+      --soft-rose: #fbf0f3;
+    }
+    .panel {
+      border-width: .75px;
+      box-shadow: 0 7px 22px rgba(111,69,83,.045);
+      border-radius: 21px;
+    }
+    .moon { border-width: .75px; box-shadow: 0 3px 12px rgba(111,69,83,.035); }
+    .tabs { gap: 7px; }
+    .tabs button,
+    button.secondary,
+    .calendar-head button {
+      border-width: .75px;
+    }
+    input, textarea, select {
+      border-width: .75px;
+      background: rgba(255,253,249,.88);
+    }
+    input:focus, textarea:focus, select:focus {
+      box-shadow: 0 0 0 2px rgba(201,143,162,.12);
+    }
+    button { box-shadow: 0 2px 7px rgba(135,88,106,.06); }
+    button:hover { box-shadow: 0 4px 11px rgba(135,88,106,.09); }
+    .entry, .favorite-memory, .mini-calendar, .stat, .circle-card,
+    .monthly-summary, .favorite-album, .day-details {
+      border-width: .75px;
+      box-shadow: none;
+    }
+    .entry { background: rgba(255,253,249,.72); border-radius: 13px; }
+    .favorite-album { background: linear-gradient(145deg,rgba(255,248,250,.82),rgba(255,253,248,.9)); }
+    .favorite-memory { border-color: #f1e3e7; border-radius: 12px; }
+    .favorite-memory-caption { padding: 11px 12px; }
+    .calendar-day { border-width: .75px; }
+    .calendar-day.selected { box-shadow: inset 0 0 0 1px #87586a; }
+    .day-details { background: rgba(255,250,242,.65); }
+    .day-detail-item { border-top-width: .75px; }
+    .diary-tag { border-width: .75px; }
+    .diary-photo { border-width: .75px; }
+    .legend-dot.predicted { border-width: .75px; }
+    @media (max-width: 600px) {
+      body { padding: 18px 11px; }
+      header { padding: 13px 0 20px; }
+      .panel { padding: 17px; border-radius: 18px; }
+      .favorite-album { padding: 13px; }
+      .favorite-album-grid { grid-template-columns: repeat(auto-fill,minmax(125px,1fr)); gap: 9px; }
+      .entry { padding: 12px; gap: 5px 10px; }
+      .stats, .circle-charts { gap: 9px; }
+      .stat, .circle-card { padding: 12px; }
+    }
+
   </style>
 </head>
 <body>
