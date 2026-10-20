@@ -515,6 +515,69 @@
     .cycle-map-reflection h3 { margin-top:0; font-size:16px; }
     .cycle-map-note { margin-top:20px; }
     @media(max-width:520px) { .cycle-map-summary { grid-template-columns:repeat(2,minmax(0,1fr)); } .cycle-map-stat { padding:12px; } .cycle-map-stat strong { font-size:19px; } .cycle-map-phases { grid-template-columns:1fr 1fr; } }
+  
+    /* Toque final: pequeños detalles botánicos y una lectura más suave */
+    header::after {
+      content: "✿  ·  ☾  ·  ♡";
+      display: block;
+      margin: 17px auto 0;
+      color: #c98fa2;
+      font-size: 14px;
+      letter-spacing: 4px;
+      opacity: .78;
+    }
+    .moon {
+      box-shadow: 0 6px 20px rgba(135,88,106,.09), inset 0 0 0 4px rgba(255,255,255,.45);
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .panel {
+      box-shadow: 0 12px 32px rgba(111,69,83,.065);
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+    .panel > h2 {
+      text-wrap: balance;
+    }
+    .panel > h2::after {
+      content: "  ✧";
+      color: #d2a0af;
+      font-size: .72em;
+      white-space: nowrap;
+    }
+    .tabs button {
+      min-height: 42px;
+    }
+    .tabs button[aria-selected="true"] {
+      box-shadow: 0 5px 13px rgba(135,88,106,.15);
+    }
+    .entry, .monthly-summary, .cycle-map-stat, .cycle-map-phase, .monthly-botanical, .emotion-corner {
+      transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+    }
+    input, textarea, select {
+      accent-color: #c98fa2;
+    }
+    ::selection {
+      color: #704b5a;
+      background: #f2dbe3;
+    }
+    @media (hover:hover) and (prefers-reduced-motion: no-preference) {
+      .moon:hover {
+        transform: rotate(-6deg) translateY(-1px);
+        box-shadow: 0 8px 23px rgba(135,88,106,.13), inset 0 0 0 4px rgba(255,255,255,.5);
+      }
+      .entry:hover, .monthly-summary:hover, .cycle-map-stat:hover, .cycle-map-phase:hover {
+        border-color: #e4c3ce;
+        box-shadow: 0 5px 16px rgba(135,88,106,.055);
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+
   </style>
 </head>
 <body>
