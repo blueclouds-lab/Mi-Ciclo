@@ -821,6 +821,27 @@
           placeholder="Puedes anotar síntomas, energía o escribir unas líneas en tu diario…"></textarea>
         <button id="saveBtn" type="submit">Guardar registro</button>
       </form>
+
+      <div class="monthly-summary" id="dailyFlowPanel">
+        <h3>🌷 Registrar cada día de regla</h3>
+        <p class="muted">Elige la fecha y cómo ha sido el flujo. Estos apuntes no crean un nuevo inicio de ciclo.</p>
+        <form id="flowForm">
+          <label for="flowDate">Fecha del día de menstruación</label>
+          <input id="flowDate" type="date" required>
+          <label for="flowLevel">¿Cómo ha sido el flujo?</label>
+          <select id="flowLevel" required>
+            <option value="">Elige una opción</option>
+            <option value="Manchado">🌸 Manchado</option>
+            <option value="Ligero">🌷 Ligero</option>
+            <option value="Moderado">🌺 Moderado</option>
+            <option value="Abundante">🌹 Abundante</option>
+          </select>
+          <button id="flowSaveBtn" type="submit">Guardar día de regla</button>
+        </form>
+        <p id="flowStatus" class="status" role="status" aria-live="polite"></p>
+        <div id="flowDuration" class="hint" aria-live="polite">Aquí aparecerán los días que vayas registrando.</div>
+        <div id="flowEntries" aria-live="polite"><p class="muted">Inicia sesión para ver tus días registrados.</p></div>
+      </div>
       <p id="saveStatus" class="status" role="status"></p>
     </div>
     <div class="panel hidden" data-tab-panel="mapa-ciclo" id="cycleMapPanel">
@@ -2573,6 +2594,117 @@
       document.getElementById("seasonCornerDetail").textContent=season.detail;
     })();
     auth.onAuthStateChanged(user => { if (user) loadGarden(user.uid); else { gardenEntries.replaceChildren(); gardenCount.textContent="🌱 Tu jardín privado te espera."; gardenFlowers.textContent="🌱 🌱 🌱"; } });
+  })();
+
+  // Registro diario de menstruación: se guarda por separado de los inicios de ciclo.
+  (function setupDailyFlow() {
+    const form = document.getElementById("flowForm");
+    const dateInput = document.getElementById("flowDate");
+    const levelInput = document.getElementById("flowLevel");
+    const status = document.getElementById("flowStatus");
+    const entriesHost = document.getElementById("flowEntries");
+    const durationHost = document.getElementById("flowDuration");
+    const saveButton = document.getElementById("flowSaveBtn");
+    if (!form || !dateInput || !levelInput || !status || !entriesHost || !durationHost || !saveButton) return;
+
+    const now = new Date();
+    dateInput.value = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+    let loadedFlowEntries = [];
+
+    function renderFlowEntries(records) {
+      loadedFlowEntries = records.slice().sort((a, b) => String(b.periodDate).localeCompare(String(a.periodDate)));
+      entriesHost.replaceChildren();
+      if (!loadedFlowEntries.length) {
+        const empty = document.createElement("p");
+        empty.className = "muted";
+        empty.textContent = "Todavía no has registrado días de regla. Puedes empezar cuando quieras. 🌱";
+        entriesHost.appendChild(empty);
+        durationHost.textContent = "Cuando registres varios días seguidos, aquí verás la duración de ese tramo.";
+        return;
+      }
+
+      const uniqueDates = [...new Set(loadedFlowEntries.map(item => item.periodDate).filter(Boolean))].sort();
+      const latestDate = uniqueDates[uniqueDates.length - 1];
+      const dateSet = new Set(uniqueDates);
+      let duration = 0;
+      const cursor = new Date(latestDate + "T12:00:00");
+      while (dateSet.has(cursor.getFullYear() + "-" + String(cursor.getMonth() + 1).padStart(2, "0") + "-" + String(cursor.getDate()).padStart(2, "0"))) {
+        duration++;
+        cursor.setDate(cursor.getDate() - 1);
+      }
+      durationHost.textContent = "En el tramo más reciente de días consecutivos has registrado " + duration + (duration === 1 ? " día." : " días.") + " (solo cuenta los días que has anotado).";
+
+      loadedFlowEntries.slice(0, 30).forEach(item => {
+        const card = document.createElement("article");
+        card.className = "entry";
+        const date = document.createElement("strong");
+        date.textContent = formatDate(item.periodDate);
+        const flow = document.createElement("p");
+        flow.textContent = "Flujo: " + item.flow;
+        card.append(date, flow);
+      });
+      loadedFlowEntries.slice(0, 30).forEach(item => {
+        const card = document.createElement("article");
+        card.className = "entry";
+        const date = document.createElement("strong");
+        date.textContent = formatDate(item.periodDate);
+        const flow = document.createElement("p");
+        flow.textContent = "Flujo: " + item.flow;
+        card.append(date, flow);
+        entriesHost.appendChild(card);
+      });
+    }
+
+    async function loadFlowEntries(uid) {
+      try {
+        const snapshot = await db.ref("users/" + uid + "/flowEntries").once("value");
+        const records = Object.entries(snapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
+        renderFlowEntries(records);
+      } catch (error) {
+        entriesHost.textContent = "No se han podido cargar los días registrados. Comprueba la conexión e inténtalo de nuevo.";
+      }
+    }
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      const user = auth.currentUser;
+      if (!user) { status.textContent = "Inicia sesión para guardar tus días de regla."; return; }
+      const periodDate = dateInput.value;
+      const flow = levelInput.value;
+      if (!periodDate || !["Manchado", "Ligero", "Moderado", "Abundante"].includes(flow)) {
+        status.textContent = "Elige una fecha y un tipo de flujo.";
+        return;
+      }
+      if (loadedFlowEntries.some(item => item.periodDate === periodDate)) {
+        status.textContent = "Ya hay un registro para esa fecha. Para no duplicarlo, no se ha guardado otro.";
+        return;
+      }
+      saveButton.disabled = true;
+      status.textContent = "Guardando tu día…";
+      try {
+        await db.ref("users/" + user.uid + "/flowEntries").push({
+          periodDate,
+          flow,
+          createdAt: firebase.database.ServerValue.TIMESTAMP
+        });
+        status.textContent = "Día de regla guardado en tu espacio privado. 🌷";
+        levelInput.value = "";
+        await loadFlowEntries(user.uid);
+      } catch (error) {
+        status.textContent = "No se ha podido guardar el día. Código: " + (error.code || "error") + ".";
+      } finally {
+        saveButton.disabled = false;
+      }
+    });
+
+    auth.onAuthStateChanged(user => {
+      if (user) loadFlowEntries(user.uid);
+      else {
+        loadedFlowEntries = [];
+        entriesHost.textContent = "Inicia sesión para ver tus días registrados.";
+        durationHost.textContent = "Aquí aparecerán los días que vayas registrando.";
+      }
+    });
   })();
 
   // Calendario lunar mensual: estimación astronómica local, sin llamadas externas ni datos guardados.
