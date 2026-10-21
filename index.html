@@ -2263,6 +2263,7 @@
         db.ref("users/" + uid + "/flowEntries").once("value").catch(() => null)
       ]);
       loadedFlowRecords = Object.entries((flowSnapshot && flowSnapshot.val()) || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
+      window.dispatchEvent(new CustomEvent("mi-ciclo-flow-updated", { detail: loadedFlowRecords }));
       const records = Object.entries(cycleSnapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
       records.sort((a, b) => String(b.periodDate || "").localeCompare(String(a.periodDate || "")));
       loadedCycleRecords = records;
