@@ -766,7 +766,8 @@
       </div>
       <div class="calendar-grid" id="calendarGrid" aria-label="Calendario mensual"></div>
       <div class="calendar-legend">
-        <span class="legend-item"><i class="legend-dot"></i> Menstruación registrada</span>
+        <span class="legend-item"><i class="legend-dot"></i> Inicio de ciclo registrado</span>
+        <span class="legend-item">🌷 Día de regla y flujo anotado</span>
         <span class="legend-item"><i class="legend-dot" style="background:#b97c91"></i> Síntomas o estado de ánimo</span>
         <span class="legend-item"><i class="legend-dot" style="background:#9c8ab8"></i> Página del diario</span>
         <span class="legend-item"><i class="legend-dot" style="background:#d4a45f"></i> Relación registrada</span>
@@ -1211,6 +1212,7 @@
   let loadedCycleRecords = [];
   let loadedSexRecords = [];
   let loadedDiaryRecords = [];
+  let loadedFlowRecords = [];
   let loadedSelfCareRecords = [];
   let selectedCalendarDate = "";
   document.getElementById("prevMonth").addEventListener("click", () => { calendarMonth.setMonth(calendarMonth.getMonth() - 1); renderCalendar(); });
@@ -1796,6 +1798,8 @@
       if (record.text) lines.push(record.text);
       addSection("Diario" + (record.title ? " · " + record.title : ""), lines.length ? lines : ["Página guardada"]);
     });
+    const flows = loadedFlowRecords.filter(record => record.periodDate === dateKey);
+    flows.forEach(record => addSection("🌷 Flujo menstrual", ["Flujo: " + record.flow]));
     const relations = loadedSexRecords.filter(record => record.date === dateKey);
     relations.forEach(record => {
       const lines = [];
@@ -1806,7 +1810,7 @@
       if (record.notes) lines.push("Notas: " + record.notes);
       addSection("Relaciones", lines.length ? lines : ["Registro guardado"]);
     });
-    if (!cycles.length && !diaries.length && !relations.length) {
+    if (!cycles.length && !flows.length && !diaries.length && !relations.length) {
       const empty = document.createElement("p");
       empty.className = "hint day-details-empty";
       empty.textContent = "No hay anotaciones guardadas para este día.";
@@ -1865,13 +1869,16 @@
       const cycleRecordsForDay = calendarRecords.filter(record => record.periodDate === key);
       const hasPeriod = actualDates.has(key);
       const hasSymptoms = cycleRecordsForDay.some(record => record.symptoms || record.mood);
+      const flowRecordsForDay = loadedFlowRecords.filter(record => record.periodDate === key);
+      const hasFlow = flowRecordsForDay.length > 0;
       const hasDiary = loadedDiaryRecords.some(record => record.date === key);
       const hasRelation = loadedSexRecords.some(record => record.date === key);
       if (key === today) cell.classList.add("today");
       if (actualDates.has(key)) { cell.classList.add("actual"); cell.title = "Menstruación registrada"; }
       else if (predicted && key === dateKey(predicted)) { cell.classList.add("predicted"); cell.title = "Próxima menstruación estimada"; }
       else if (fertileStart && date >= new Date(fertileStart.getFullYear(), fertileStart.getMonth(), fertileStart.getDate(), 12) && date <= new Date(fertileEnd.getFullYear(), fertileEnd.getMonth(), fertileEnd.getDate(), 12)) { cell.classList.add("fertile"); cell.title = "Ventana fértil estimada"; }
-      if (hasPeriod) { const mark = document.createElement("span"); mark.className = "day-marker period"; mark.textContent = "♥"; mark.title = "Menstruación registrada"; markers.appendChild(mark); }
+      if (hasPeriod) { const mark = document.createElement("span"); mark.className = "day-marker period"; mark.textContent = "♥"; mark.title = "Inicio de ciclo registrado"; markers.appendChild(mark); }
+      if (hasFlow) { const mark = document.createElement("span"); mark.className = "day-marker flow"; mark.textContent = "🌷"; mark.title = "Flujo menstrual: " + [...new Set(flowRecordsForDay.map(record => record.flow))].join(", "); markers.appendChild(mark); }
       if (hasSymptoms) { const mark = document.createElement("span"); mark.className = "day-marker symptoms"; mark.textContent = "✿"; mark.title = "Síntomas o estado de ánimo"; markers.appendChild(mark); }
       if (hasDiary) { const mark = document.createElement("span"); mark.className = "day-marker diary"; mark.textContent = "▤"; mark.title = "Página del diario"; markers.appendChild(mark); }
       if (hasRelation) { const mark = document.createElement("span"); mark.className = "day-marker relation"; mark.textContent = "♡"; mark.title = "Relación registrada"; markers.appendChild(mark); }
@@ -2245,10 +2252,12 @@
     loadDiaryEntries(uid);
     loadSelfCareEntries(uid);
     try {
-      const [cycleSnapshot, sexSnapshot] = await Promise.all([
+      const [cycleSnapshot, sexSnapshot, flowSnapshot] = await Promise.all([
         db.ref("users/" + uid + "/cycleEntries").once("value"),
-        db.ref("users/" + uid + "/sexualEntries").once("value")
+        db.ref("users/" + uid + "/sexualEntries").once("value"),
+        db.ref("users/" + uid + "/flowEntries").once("value").catch(() => null)
       ]);
+      loadedFlowRecords = Object.entries((flowSnapshot && flowSnapshot.val()) || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
       const records = Object.entries(cycleSnapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
       records.sort((a, b) => String(b.periodDate || "").localeCompare(String(a.periodDate || "")));
       loadedCycleRecords = records;
@@ -2660,6 +2669,7 @@
         const snapshot = await db.ref("users/" + uid + "/flowEntries").once("value");
         const records = Object.entries(snapshot.val() || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
         renderFlowEntries(records);
+        window.dispatchEvent(new CustomEvent("mi-ciclo-flow-updated", { detail: records }));
       } catch (error) {
         entriesHost.textContent = "No se han podido cargar los días registrados. Comprueba la conexión e inténtalo de nuevo.";
       }
@@ -2695,6 +2705,12 @@
       } finally {
         saveButton.disabled = false;
       }
+    });
+
+    window.addEventListener("mi-ciclo-flow-updated", event => {
+      loadedFlowRecords = Array.isArray(event.detail) ? event.detail : [];
+      renderCalendar();
+      if (selectedCalendarDate) showCalendarDay(selectedCalendarDate);
     });
 
     auth.onAuthStateChanged(user => {
