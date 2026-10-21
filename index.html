@@ -1215,6 +1215,11 @@
   let loadedFlowRecords = [];
   let loadedSelfCareRecords = [];
   let selectedCalendarDate = "";
+  window.addEventListener("mi-ciclo-flow-updated", event => {
+    loadedFlowRecords = Array.isArray(event.detail) ? event.detail : [];
+    renderCalendar();
+    if (selectedCalendarDate) showCalendarDay(selectedCalendarDate);
+  });
   document.getElementById("prevMonth").addEventListener("click", () => { calendarMonth.setMonth(calendarMonth.getMonth() - 1); renderCalendar(); });
   document.getElementById("nextMonth").addEventListener("click", () => { calendarMonth.setMonth(calendarMonth.getMonth() + 1); renderCalendar(); });
   document.getElementById("calendarGrid").addEventListener("click", event => {
@@ -2705,12 +2710,6 @@
       } finally {
         saveButton.disabled = false;
       }
-    });
-
-    window.addEventListener("mi-ciclo-flow-updated", event => {
-      loadedFlowRecords = Array.isArray(event.detail) ? event.detail : [];
-      renderCalendar();
-      if (selectedCalendarDate) showCalendarDay(selectedCalendarDate);
     });
 
     auth.onAuthStateChanged(user => {
