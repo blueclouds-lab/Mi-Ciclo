@@ -2370,7 +2370,23 @@
         });
       }
       const debugStatus = document.getElementById("sexDebugStatus");
-      if (debugStatus) debugStatus.textContent = "Diagnóstico · UID de sesión: " + uid + " · Ruta consultada: users/" + uid + "/sexualEntries · Firebase devolvió " + sexRecords.length + " relaciones y la página creó " + sexEntries.querySelectorAll(".entry").length + " tarjetas visibles. Fechas cargadas: " + (sexRecords.map(record => record.date || "sin fecha").join(" · ") || "ninguna") + " · Claves recibidas: " + (sexRecords.map(record => record.id || "sin clave").join(", ") || "ninguna") + ".";
+      if (debugStatus) {
+        const baseDiagnostic = "Diagnóstico · UID de sesión: " + uid + " · Ruta consultada: users/" + uid + "/sexualEntries · Firebase SDK: " + sexRecords.length + " relaciones · Tarjetas: " + sexEntries.querySelectorAll(".entry").length + " · Fechas: " + (sexRecords.map(record => record.date || "sin fecha").join(" · ") || "ninguna") + " · Claves: " + (sexRecords.map(record => record.id || "sin clave").join(", ") || "ninguna");
+        debugStatus.textContent = baseDiagnostic + " · Comprobando lectura HTTP independiente…";
+        try {
+          const currentUser = auth.currentUser;
+          if (!currentUser) throw new Error("NO_AUTH_USER");
+          const token = await currentUser.getIdToken(true);
+          const restUrl = firebaseConfig.databaseURL + "/users/" + encodeURIComponent(uid) + "/sexualEntries.json?auth=" + encodeURIComponent(token);
+          const response = await fetch(restUrl, { cache: "no-store" });
+          if (!response.ok) throw new Error("HTTP_" + response.status);
+          const restData = await response.json();
+          const restEntries = restData && typeof restData === "object" ? Object.entries(restData) : [];
+          debugStatus.textContent = baseDiagnostic + " · REST HTTP: " + restEntries.length + " relaciones · Claves REST: " + (restEntries.map(([key]) => key).join(", ") || "ninguna") + ".";
+        } catch (restError) {
+          debugStatus.textContent = baseDiagnostic + " · REST HTTP no disponible: " + (restError.message || restError);
+        }
+      }
     } catch (error) {
       const debugStatus = document.getElementById("sexDebugStatus");
       if (debugStatus) debugStatus.textContent = "Diagnóstico de carga: error " + (error.code || error.message || "desconocido") + ".";
