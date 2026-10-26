@@ -2414,7 +2414,7 @@
   document.getElementById("sexForm").addEventListener("submit", async (event) => {
     event.preventDefault();
     const user = auth.currentUser;
-    if (!user) return;
+    if (!user) { sexStatus.textContent = "Inicia sesión para guardar."; return; }
     const record = {
       date: document.getElementById("sexDate").value,
       protection: document.getElementById("protection").value,
@@ -2424,17 +2424,21 @@
       notes: document.getElementById("sexNotes").value.trim(),
       createdAt: firebase.database.ServerValue.TIMESTAMP
     };
-    if (!record.date) return;
+    if (!record.date) { sexStatus.textContent = "Elige una fecha."; return; }
     const button = document.getElementById("sexSaveBtn");
     button.disabled = true;
-    sexStatus.textContent = "Guardando…";
+    sexStatus.textContent = "Comprobando guardado…";
     try {
-      await db.ref("users/" + user.uid + "/sexualEntries").push(record);
-      sexStatus.textContent = "Relación registrada.";
+      const listRef = db.ref("users/" + user.uid + "/sexualEntries");
+      const savedRef = await listRef.push(record);
+      const [savedSnapshot, listSnapshot] = await Promise.all([savedRef.once("value"), listRef.once("value")]);
+      if (!savedSnapshot.exists()) throw new Error("WRITE_READBACK_EMPTY");
+      const allRecords = Object.entries(listSnapshot.val() || {});
+      sexStatus.textContent = "Firebase confirma este registro. Total de relaciones leídas ahora: " + allRecords.length + ". Identificador del último guardado: " + savedRef.key.slice(-6) + ". Recarga la página y comprueba si el total se mantiene.";
       document.getElementById("sexForm").reset();
       await loadEntries(user.uid);
     } catch (error) {
-      sexStatus.textContent = "No se ha guardado. Primero hay que añadir la ruta sexualEntries a las reglas privadas de Firebase. Código: " + error.code;
+      sexStatus.textContent = "La prueba de guardado/lectura ha fallado. Código: " + (error.code || error.message || "error") + ". No se han cambiado las reglas privadas.";
     } finally {
       button.disabled = false;
     }
