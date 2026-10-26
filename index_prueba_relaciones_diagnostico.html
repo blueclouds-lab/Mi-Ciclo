@@ -1851,7 +1851,9 @@
       const days = Math.round((new Date(sorted[i] + "T12:00:00") - new Date(sorted[i - 1] + "T12:00:00")) / 86400000);
       if (days >= 15 && days <= 60) lengths.push(days);
     }
-    const avg = lengths.length ? Math.round(lengths.reduce((sum, days) => sum + days, 0) / lengths.length) : null;
+    // Si aún no hay suficientes ciclos para calcular una media, usar 28 días como estimación inicial,
+    // igual que el mapa del ciclo. Se actualizará cuando existan intervalos reales válidos.
+    const avg = lengths.length ? Math.round(lengths.reduce((sum, days) => sum + days, 0) / lengths.length) : (sorted.length ? 28 : null);
     let predicted = null, fertileStart = null, fertileEnd = null;
     if (avg && sorted.length) {
       predicted = new Date(sorted[sorted.length - 1] + "T12:00:00"); predicted.setDate(predicted.getDate() + avg);
