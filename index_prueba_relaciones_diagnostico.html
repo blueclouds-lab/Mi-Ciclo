@@ -2370,7 +2370,7 @@
         });
       }
       const debugStatus = document.getElementById("sexDebugStatus");
-      if (debugStatus) debugStatus.textContent = "Diagnóstico: Firebase devolvió " + sexRecords.length + " relaciones y la página creó " + sexEntries.querySelectorAll(".entry").length + " tarjetas visibles. Fechas cargadas: " + (sexRecords.map(record => record.date || "sin fecha").join(" · ") || "ninguna") + ".";
+      if (debugStatus) debugStatus.textContent = "Diagnóstico · UID de sesión: " + uid + " · Ruta consultada: users/" + uid + "/sexualEntries · Firebase devolvió " + sexRecords.length + " relaciones y la página creó " + sexEntries.querySelectorAll(".entry").length + " tarjetas visibles. Fechas cargadas: " + (sexRecords.map(record => record.date || "sin fecha").join(" · ") || "ninguna") + " · Claves recibidas: " + (sexRecords.map(record => record.id || "sin clave").join(", ") || "ninguna") + ".";
     } catch (error) {
       const debugStatus = document.getElementById("sexDebugStatus");
       if (debugStatus) debugStatus.textContent = "Diagnóstico de carga: error " + (error.code || error.message || "desconocido") + ".";
