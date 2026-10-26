@@ -1044,6 +1044,7 @@
     <div class="panel hidden" data-tab-panel="relaciones">
       <h2>Mis relaciones registradas</h2>
       <div id="sexEntries"><p class="muted">Cargando…</p></div>
+      <p id="sexDebugStatus" class="hint" role="status">El diagnóstico de visualización aparecerá aquí tras cargar los registros.</p>
     </div>
     <div class="panel" data-tab-panel="resumen">
       <h2>Últimos registros</h2>
@@ -2368,7 +2369,11 @@
           sexEntries.appendChild(item);
         });
       }
+      const debugStatus = document.getElementById("sexDebugStatus");
+      if (debugStatus) debugStatus.textContent = "Diagnóstico: Firebase devolvió " + sexRecords.length + " relaciones y la página creó " + sexEntries.querySelectorAll(".entry").length + " tarjetas visibles. Fechas cargadas: " + (sexRecords.map(record => record.date || "sin fecha").join(" · ") || "ninguna") + ".";
     } catch (error) {
+      const debugStatus = document.getElementById("sexDebugStatus");
+      if (debugStatus) debugStatus.textContent = "Diagnóstico de carga: error " + (error.code || error.message || "desconocido") + ".";
       entries.textContent = "";
       sexEntries.textContent = "";
       recentEntries.textContent = "";
