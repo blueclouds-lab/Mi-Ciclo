@@ -2325,8 +2325,26 @@
         });
       }
 
-      const sexRecords = [];
-      sexSnapshot.forEach(child => sexRecords.push({ id: child.key, ...child.val() }));
+      const sexRecordsFromSdk = [];
+      sexSnapshot.forEach(child => sexRecordsFromSdk.push({ id: child.key, ...child.val() }));
+      let sexRecords = sexRecordsFromSdk;
+      // En esta página de prueba, contrastamos la lectura SDK con REST para evitar
+      // que una instantánea incompleta o antigua oculte relaciones ya guardadas.
+      try {
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+          const token = await currentUser.getIdToken(true);
+          const restUrl = firebaseConfig.databaseURL + "/users/" + encodeURIComponent(uid) + "/sexualEntries.json?auth=" + encodeURIComponent(token);
+          const response = await fetch(restUrl, { cache: "no-store" });
+          if (response.ok) {
+            const restData = await response.json();
+            const restRecords = Object.entries(restData || {}).map(([id, value]) => ({ id, ...(value && typeof value === "object" ? value : {}) }));
+            if (restRecords.length > sexRecords.length) sexRecords = restRecords;
+          }
+        }
+      } catch (restFallbackError) {
+        console.warn("Mi Ciclo: lectura REST de respaldo no disponible; se mantienen los registros del SDK.", restFallbackError);
+      }
       sexRecords.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
       loadedSexRecords = sexRecords;
       renderCalendar();
